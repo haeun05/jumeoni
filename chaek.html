@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>주머니 — 느린 책 교환</title>
+<meta name="description" content="책 한 권을 추천하고, 다 읽은 뒤에야 열어볼 수 있는 봉인 편지를 함께 건네는 곳.">
+<meta property="og:title" content="주머니 — 느린 책 교환">
+<meta property="og:description" content="누군가 당신에게 책 한 권을 건넸어요. 다 읽으면 편지를 열 수 있어요.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
+<script src="lib/qrcode.min.js"></script>
+<script src="lib/lz-string.min.js"></script>
+<style>
+  :root {
+    --paper: #faf6ef;
+    --ink: #3d3529;
+    --ink-soft: #8a7f6d;
+    --accent: #46614e;   /* 이 방의 색: 서가의 초록 */
+    --wax: #a03b2e;      /* 봉인 왁스 */
+    --line: #e2d9c8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Noto Serif KR', serif;
+    background: var(--paper);
+    color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
+    background-image: radial-gradient(circle at 15% 12%, rgba(70,97,78,0.05), transparent 40%),
+                      radial-gradient(circle at 85% 88%, rgba(120,110,90,0.05), transparent 40%);
+  }
+  main { width: 100%; max-width: 480px; padding: 40px 24px 80px; flex: 1; }
+  header { text-align: center; padding-top: 24px; }
+  .brand {
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: 15px; letter-spacing: 0.35em; color: var(--ink-soft);
+    cursor: pointer; user-select: none;
+  }
+  .room-name { font-size: 11px; letter-spacing: 0.25em; color: var(--accent); margin-top: 6px; font-weight: 300; }
+  .hidden { display: none !important; }
+
+  h1 {
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: 26px; font-weight: 700; text-align: center;
+    margin: 40px 0 8px; line-height: 1.5;
+  }
+  .sub {
+    text-align: center; color: var(--ink-soft); font-size: 14px;
+    font-weight: 300; margin-bottom: 32px; line-height: 1.8;
+  }
+  label { display: block; font-size: 13px; color: var(--ink-soft); margin: 24px 0 8px; letter-spacing: 0.08em; }
+  textarea, input[type=text] {
+    width: 100%;
+    font-family: 'Noto Serif KR', serif;
+    font-size: 16px; color: var(--ink);
+    background: transparent;
+    border: none; border-bottom: 1px solid var(--line);
+    padding: 8px 2px; line-height: 1.9;
+    resize: none; outline: none;
+    transition: border-color .3s;
+  }
+  textarea:focus, input[type=text]:focus { border-color: var(--accent); }
+  textarea.boxed { min-height: 110px; border: 1px solid var(--line); border-radius: 2px; padding: 16px; background: rgba(255,255,255,0.5); }
+  textarea.boxed:focus { border-color: var(--accent); }
+  .notice { margin-top: 10px; font-size: 12px; color: var(--ink-soft); font-weight: 300; line-height: 1.8; }
+  .btn {
+    display: block; width: 100%;
+    margin-top: 40px; padding: 16px;
+    font-family: 'Noto Serif KR', serif; font-size: 16px; letter-spacing: 0.2em;
+    color: var(--paper); background: var(--ink);
+    border: none; border-radius: 2px; cursor: pointer;
+    transition: background .3s;
+  }
+  .btn:hover { background: var(--accent); }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--ink); margin-top: 16px; }
+  .btn.ghost:hover { color: var(--accent); border-color: var(--accent); }
+  .btn.small { margin-top: 0; padding: 12px; font-size: 14px; }
+
+  .lock-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+  .lock {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 13px; color: var(--ink-soft);
+    background: transparent; border: 1px solid var(--line); border-radius: 999px;
+    padding: 7px 14px; cursor: pointer; transition: all .25s;
+  }
+  .lock:hover { border-color: var(--accent); color: var(--accent); }
+  .lock.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  /* ---------- 완성 화면 ---------- */
+  .done { text-align: center; margin-top: 40px; }
+  .done h2 { font-family: 'Nanum Myeongjo', serif; font-size: 22px; margin-bottom: 12px; }
+  .done p { color: var(--ink-soft); font-size: 14px; line-height: 1.9; font-weight: 300; }
+  .qr-frame {
+    width: 216px; margin: 28px auto 0; padding: 16px;
+    background: #fff; border: 1px solid var(--line); border-radius: 3px;
+    box-shadow: 0 12px 32px rgba(61,53,41,0.08);
+  }
+  .qr-frame svg { display: block; width: 100%; height: auto; }
+  .qr-caption { margin-top: 10px; font-size: 11.5px; color: var(--ink-soft); letter-spacing: 0.1em; font-weight: 300; }
+  .linkbox {
+    margin: 24px 0 8px; padding: 14px;
+    background: rgba(255,255,255,0.6);
+    border: 1px dashed var(--line); border-radius: 2px;
+    font-size: 12px; color: var(--ink-soft);
+    word-break: break-all; text-align: left;
+    max-height: 76px; overflow: hidden;
+  }
+  .copied { color: var(--accent); font-size: 13px; height: 20px; }
+
+  /* ---------- 받기: 꾸러미 ---------- */
+  .parcel-scene { text-align: center; margin-top: 48px; }
+  .parcel-scene .hint { color: var(--ink-soft); font-size: 14px; font-weight: 300; margin-top: 28px; letter-spacing: 0.1em; line-height: 2; }
+  .parcel {
+    width: 150px; height: 190px; margin: 40px auto 0;
+    background: linear-gradient(160deg, #5b7a63, #46614e);
+    border-radius: 4px 10px 10px 4px;
+    position: relative; cursor: pointer;
+    box-shadow: 0 18px 40px rgba(61,53,41,0.22);
+    transition: transform .4s;
+  }
+  .parcel:hover { transform: translateY(-6px) rotate(1.5deg); }
+  .parcel::before {  /* 책등 */
+    content: ''; position: absolute; left: 10px; top: 0; bottom: 0;
+    border-left: 2px solid rgba(250,246,239,0.35);
+  }
+  .parcel::after {  /* 리본 */
+    content: ''; position: absolute; top: 0; bottom: 0; left: 50%;
+    width: 22px; transform: translateX(-50%);
+    background: rgba(250,246,239,0.28);
+  }
+  .parcel .ribbon-h {
+    position: absolute; left: 0; right: 0; top: 50%;
+    height: 22px; transform: translateY(-50%);
+    background: rgba(250,246,239,0.28);
+  }
+
+  /* ---------- 받기: 책 카드 ---------- */
+  .card-wrap { margin-top: 40px; }
+  .card {
+    background: #fffdf8;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 48px 32px 40px;
+    box-shadow: 0 24px 60px rgba(61,53,41,0.12);
+    text-align: center;
+    transform-origin: top center;
+    animation: unfold 1.1s cubic-bezier(.22,.9,.3,1) both;
+  }
+  @keyframes unfold {
+    0% { transform: rotateX(-88deg); opacity: 0; }
+    60% { opacity: 1; }
+    100% { transform: rotateX(0); opacity: 1; }
+  }
+  .book-label { font-size: 11.5px; letter-spacing: 0.3em; color: var(--accent); margin-bottom: 18px; }
+  .book-title { font-family: 'Nanum Myeongjo', serif; font-size: 24px; font-weight: 700; line-height: 1.6; }
+  .book-writer { margin-top: 10px; font-size: 14px; color: var(--ink-soft); font-weight: 300; }
+  .divider { width: 32px; height: 1px; background: var(--line); margin: 32px auto; }
+  .book-reason { font-size: 15px; line-height: 2.2; white-space: pre-wrap; font-weight: 300; text-align: left; }
+  .gift-from { margin-top: 24px; font-size: 13px; color: var(--accent); }
+
+  /* 봉인 편지 */
+  .seal-box {
+    margin-top: 28px; padding: 32px 24px;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid var(--line); border-radius: 3px;
+    text-align: center;
+  }
+  .wax {
+    width: 64px; height: 64px; margin: 0 auto;
+    background: radial-gradient(circle at 35% 30%, #c25243, var(--wax) 60%, #7e2c22);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(250,246,239,0.9);
+    font-family: 'Nanum Myeongjo', serif; font-size: 22px; font-weight: 700;
+    box-shadow: 0 6px 16px rgba(160,59,46,0.35), inset 0 -3px 6px rgba(0,0,0,0.2);
+    cursor: pointer; transition: transform .3s;
+  }
+  .wax:hover { transform: scale(1.06); }
+  .wax.dim { filter: grayscale(0.5) brightness(0.85); cursor: default; }
+  .wax.dim:hover { transform: none; }
+  .seal-msg { margin-top: 16px; font-size: 13px; color: var(--ink-soft); font-weight: 300; line-height: 2; }
+  .seal-confirm { margin-top: 16px; }
+  .seal-confirm p { font-size: 13.5px; color: var(--ink); line-height: 2; margin-bottom: 12px; }
+  .seal-confirm button {
+    font-family: 'Noto Serif KR', serif; font-size: 13px;
+    padding: 9px 18px; margin: 0 4px; cursor: pointer; border-radius: 2px;
+    border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+  }
+  .seal-confirm button.no { background: transparent; color: var(--ink-soft); border-color: var(--line); }
+  .letter {
+    margin-top: 20px; padding: 28px 22px;
+    background: #fffdf8; border: 1px solid var(--line); border-radius: 2px;
+    font-size: 15px; line-height: 2.3; white-space: pre-wrap; text-align: left;
+    animation: unfold .9s cubic-bezier(.22,.9,.3,1) both;
+  }
+  .lineage {
+    margin-top: 28px; text-align: center;
+    font-size: 12.5px; color: var(--ink-soft); font-weight: 300; letter-spacing: 0.05em;
+  }
+  footer {
+    padding: 24px; font-size: 11px; color: var(--ink-soft);
+    letter-spacing: 0.2em; font-weight: 300; text-align: center; line-height: 2;
+  }
+  footer a { color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand" onclick="location.hash=''; route()">주 머 니</div>
+  <div class="room-name">느린 책 교환</div>
+</header>
+<main>
+
+  <!-- 만들기 -->
+  <section id="view-compose" class="hidden">
+    <h1>책 한 권과<br>봉인 편지를 건네보세요</h1>
+    <p class="sub">책을 추천하면서 편지를 함께 봉인해요<br>편지는 상대가 책을 다 읽은 뒤에야 열 수 있어요</p>
+    <button class="btn ghost small" onclick="location.href='index.html'">📜 건네는 시 방으로</button>
+    <label>책 제목</label>
+    <input type="text" id="book" placeholder="예) 어린 왕자">
+    <label>지은이</label>
+    <input type="text" id="writer" placeholder="예) 앙투안 드 생텍쥐페리">
+    <label>추천하는 마음</label>
+    <textarea class="boxed" id="reason" placeholder="이 책을 왜 이 사람에게 건네고 싶었나요"></textarea>
+    <label>봉인 편지 — 다 읽은 뒤에 열어볼 편지</label>
+    <textarea class="boxed" id="letter" placeholder="책을 다 읽은 상대에게 하고 싶은 말을 적어주세요. 그때까지 봉인돼요."></textarea>
+    <p class="notice">추천의 말과 편지는 직접 쓴 글이라 저작권 걱정이 없어요. 책 속 문장을 길게 옮겨 적는 건 피해주세요.</p>
+    <label>편지 잠금</label>
+    <div class="lock-picker" id="lock-picker">
+      <button class="lock on" data-days="0" onclick="setLock(0)">읽었다고 하면 바로</button>
+      <button class="lock" data-days="7" onclick="setLock(7)">일주일 뒤부터</button>
+      <button class="lock" data-days="14" onclick="setLock(14)">2주 뒤부터</button>
+      <button class="lock" data-days="30" onclick="setLock(30)">한 달 뒤부터</button>
+    </div>
+    <label>건네는 사람 <span style="opacity:.6">(선택)</span></label>
+    <input type="text" id="from" placeholder="예) 책장 앞에서 서성이던 사람">
+    <button class="btn" onclick="makeParcel()">책 꾸러미 만들기</button>
+  </section>
+
+  <!-- 완성 -->
+  <section id="view-done" class="done hidden">
+    <h2>꾸러미가 준비됐어요</h2>
+    <p>링크를 보내거나 QR을 저장해서<br>책과 함께 건네보세요</p>
+    <div class="qr-frame">
+      <div id="qr"></div>
+      <div class="qr-caption">QR을 찍으면 꾸러미가 열려요</div>
+    </div>
+    <div class="linkbox" id="share-link"></div>
+    <div class="copied" id="copied-msg"></div>
+    <button class="btn" onclick="copyLink()">링크 복사하기</button>
+    <button class="btn ghost" onclick="downloadQR()">QR 저장하기 (PNG · 인쇄용)</button>
+    <button class="btn ghost" onclick="openParcelLink()">받는 사람의 눈으로 미리 보기</button>
+  </section>
+
+  <!-- 받기: 꾸러미 -->
+  <section id="view-parcel" class="parcel-scene hidden">
+    <div class="parcel" onclick="openParcel()"><div class="ribbon-h"></div></div>
+    <p class="hint">누군가 당신에게 책 한 권을 건넸어요<br>꾸러미를 풀어보세요</p>
+  </section>
+
+  <!-- 받기: 책 카드 -->
+  <section id="view-card" class="card-wrap hidden">
+    <div class="card">
+      <div class="book-label">당신에게 온 책</div>
+      <div class="book-title" id="card-book"></div>
+      <div class="book-writer" id="card-writer"></div>
+      <div class="divider"></div>
+      <div class="book-reason" id="card-reason"></div>
+      <div class="gift-from" id="card-from"></div>
+    </div>
+
+    <div class="seal-box" id="seal-box">
+      <div class="wax" id="wax" onclick="tryOpenSeal()">封</div>
+      <div class="seal-msg" id="seal-msg"></div>
+      <div class="seal-confirm hidden" id="seal-confirm">
+        <p>책을 다 읽으셨나요?<br>편지는 한 번 열면 다시 봉인되지 않아요.</p>
+        <button onclick="openSeal()">네, 다 읽었어요</button>
+        <button class="no" onclick="hideConfirm()">아직이에요</button>
+      </div>
+      <div class="letter hidden" id="letter-body"></div>
+    </div>
+
+    <div class="lineage" id="card-lineage"></div>
+    <button class="btn ghost" onclick="passOn()">나도 책 한 권 건네기</button>
+  </section>
+
+</main>
+<footer>
+  JUMEONI · SLOW BOOK EXCHANGE<br>
+  <a href="index.html">건네는 시 방으로 →</a>
+</footer>
+
+<script>
+  // 꾸러미 데이터는 서버 없이 URL 해시에 담는다. #z=<lz-string 압축>
+  function encodeParcel(data) {
+    return 'z=' + LZString.compressToEncodedURIComponent(JSON.stringify(data));
+  }
+  function decodeParcel(s) {
+    try { return JSON.parse(LZString.decompressFromEncodedURIComponent(s)); }
+    catch { return null; }
+  }
+
+  let currentLink = '';
+  let currentParcel = null;
+  let lockDays = 0;
+  let lastQR = null;
+
+  function setLock(days) {
+    lockDays = days;
+    document.querySelectorAll('.lock').forEach(e =>
+      e.classList.toggle('on', Number(e.dataset.days) === days));
+  }
+
+  function makeParcel() {
+    const book = document.getElementById('book').value.trim();
+    const letter = document.getElementById('letter').value.trim();
+    if (!book) { document.getElementById('book').focus(); return; }
+    if (!letter) { document.getElementById('letter').focus(); return; }
+    const data = {
+      b: book,
+      w: document.getElementById('writer').value.trim(),
+      r: document.getElementById('reason').value.trim(),
+      l: letter,
+      f: document.getElementById('from').value.trim(),
+      g: (currentParcel ? (currentParcel.g || 1) + 1 : 1)  // 교환이 몇 번째로 이어지는지
+    };
+    if (lockDays > 0) data.u = Date.now() + lockDays * 86400000;  // 편지 잠금 해제 시각
+    currentLink = location.origin + location.pathname + '#' + encodeParcel(data);
+    document.getElementById('share-link').textContent = currentLink;
+    document.getElementById('copied-msg').textContent = '';
+    renderQR(currentLink);
+    show('view-done');
+    window.scrollTo(0, 0);
+  }
+
+  function renderQR(link) {
+    const el = document.getElementById('qr');
+    lastQR = null;
+    el.innerHTML = '';
+    if (typeof qrcode === 'undefined') {
+      el.innerHTML = '<div style="font-size:12px;color:var(--ink-soft);padding:20px 0">QR 생성기를 불러오지 못했어요.<br>링크로 건네주세요.</div>';
+      return;
+    }
+    for (const ec of ['M', 'L']) {
+      try {
+        const qr = qrcode(0, ec);
+        qr.addData(link);
+        qr.make();
+        el.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+        lastQR = qr;
+        return;
+      } catch (e) { /* 다음 수준으로 */ }
+    }
+    el.innerHTML = '<div style="font-size:12px;color:var(--ink-soft);padding:20px 0">내용이 너무 길어 QR을 만들 수 없어요.<br>링크로 건네주세요.</div>';
+  }
+
+  function downloadQR() {
+    if (!lastQR) return;
+    const n = lastQR.getModuleCount();
+    const cell = 16, quiet = cell * 4;
+    const size = n * cell + quiet * 2;
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = size;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#3d3529';
+    for (let r = 0; r < n; r++)
+      for (let c = 0; c < n; c++)
+        if (lastQR.isDark(r, c)) ctx.fillRect(quiet + c * cell, quiet + r * cell, cell, cell);
+    const a = document.createElement('a');
+    a.href = cv.toDataURL('image/png');
+    a.download = 'jumeoni-book-qr.png';
+    a.click();
+  }
+
+  function copyLink() {
+    navigator.clipboard.writeText(currentLink).then(() => {
+      document.getElementById('copied-msg').textContent = '복사됐어요. 책과 함께 건네주세요.';
+    });
+  }
+
+  function openParcelLink() { location.href = currentLink; route(); }
+
+  function openParcel() {
+    renderCard(currentParcel);
+    show('view-card');
+    window.scrollTo(0, 0);
+  }
+
+  function fmtDate(ts) {
+    const d = new Date(ts);
+    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  }
+
+  function renderCard(d) {
+    document.getElementById('card-book').textContent = `『${d.b}』`;
+    document.getElementById('card-writer').textContent = d.w || '';
+    document.getElementById('card-reason').textContent = d.r || '';
+    document.getElementById('card-from').textContent = d.f ? d.f + ' 드림' : '';
+    const g = d.g || 1;
+    document.getElementById('card-lineage').textContent =
+      g > 1 ? `이 교환은 ${g}번째 책으로 이어지고 있어요` : '이 책으로 느린 교환이 시작됐어요';
+    // 봉인 초기화
+    document.getElementById('letter-body').classList.add('hidden');
+    document.getElementById('seal-confirm').classList.add('hidden');
+    document.getElementById('wax').classList.remove('hidden');
+    updateSealMsg(d);
+  }
+
+  function updateSealMsg(d) {
+    const wax = document.getElementById('wax');
+    if (d.u && Date.now() < d.u) {
+      wax.classList.add('dim');
+      document.getElementById('seal-msg').innerHTML =
+        `봉인 편지가 함께 왔어요<br>${fmtDate(d.u)}부터, 책을 다 읽은 뒤에 열 수 있어요`;
+    } else {
+      wax.classList.remove('dim');
+      document.getElementById('seal-msg').innerHTML =
+        '봉인 편지가 함께 왔어요<br>책을 다 읽은 뒤에 열어주세요';
+    }
+  }
+
+  function tryOpenSeal() {
+    const d = currentParcel;
+    if (!d) return;
+    if (d.u && Date.now() < d.u) return;  // 아직 잠겨 있어요
+    document.getElementById('seal-confirm').classList.remove('hidden');
+  }
+
+  function hideConfirm() {
+    document.getElementById('seal-confirm').classList.add('hidden');
+  }
+
+  function openSeal() {
+    document.getElementById('seal-confirm').classList.add('hidden');
+    document.getElementById('wax').classList.add('hidden');
+    document.getElementById('seal-msg').innerHTML = '봉인이 풀렸어요';
+    const body = document.getElementById('letter-body');
+    body.textContent = currentParcel.l;
+    body.classList.remove('hidden');
+  }
+
+  function passOn() {
+    ['book','writer','reason','letter','from'].forEach(id => document.getElementById(id).value = '');
+    setLock(0);
+    show('view-compose');
+    window.scrollTo(0, 0);
+  }
+
+  function show(id) {
+    ['view-compose','view-done','view-parcel','view-card'].forEach(v =>
+      document.getElementById(v).classList.toggle('hidden', v !== id));
+  }
+
+  function route() {
+    const m = location.hash.match(/^#z=(.+)$/);
+    if (m) {
+      const d = decodeParcel(m[1]);
+      if (d && d.b) { currentParcel = d; show('view-parcel'); return; }
+    }
+    currentParcel = null;
+    show('view-compose');
+  }
+
+  window.addEventListener('hashchange', route);
+  route();
+</script>
+</body>
+</html>
