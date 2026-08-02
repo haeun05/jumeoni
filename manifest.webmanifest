@@ -1,0 +1,15 @@
+{
+  "name": "주머니 — 느린 것들의 집",
+  "short_name": "주머니",
+  "description": "모르는 사람과, 느린 방식으로, 시·책·편지·장소를 매개로 연결되는 낭만.",
+  "lang": "ko",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#faf6ef",
+  "theme_color": "#faf6ef",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

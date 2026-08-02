@@ -3,257 +3,78 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>주머니 — 건네는 시</title>
-<meta name="description" content="직접 쓴 문장이나 저작권이 만료된 시를 카드로 만들어, 링크와 QR로 건네는 곳.">
-<meta property="og:title" content="주머니 — 건네는 시">
-<meta property="og:description" content="누군가 당신에게 시 한 편을 건넸어요. 주머니를 열어보세요.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
+<title>주머니 — 느린 것들의 집</title>
+<meta name="description" content="모르는 사람과, 느린 방식으로, 시·책·편지·장소를 매개로 연결되는 낭만.">
+<meta property="og:title" content="주머니">
+<meta property="og:description" content="시를 건네고, 책을 나누고, 편지를 띄우는 느린 집.">
+<meta name="theme-color" content="#faf6ef">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<script>
+  // 예전 링크 호환: 시 카드 링크(#c=/#z=)가 대문으로 오면 시 방으로 넘긴다
+  if (/^#(c|z)=/.test(location.hash)) location.replace('si.html' + location.hash);
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
-<script src="lib/qrcode.min.js"></script>
-<script src="lib/lz-string.min.js"></script>
 <style>
   :root {
     --paper: #faf6ef;
-    --paper-deep: #f3ecdf;
     --ink: #3d3529;
     --ink-soft: #8a7f6d;
     --accent: #b0563c;
     --line: #e2d9c8;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { height: 100%; }
   body {
     font-family: 'Noto Serif KR', serif;
     background: var(--paper);
     color: var(--ink);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: flex; flex-direction: column; align-items: center;
     min-height: 100vh;
     background-image: radial-gradient(circle at 20% 10%, rgba(176,86,60,0.04), transparent 40%),
                       radial-gradient(circle at 80% 90%, rgba(120,110,90,0.05), transparent 40%);
   }
-  main { width: 100%; max-width: 480px; padding: 40px 24px 80px; flex: 1; }
-  header { text-align: center; padding-top: 24px; }
-  .brand {
+  main { width: 100%; max-width: 520px; padding: 0 24px 64px; flex: 1; }
+  .hero { text-align: center; padding: 72px 0 40px; }
+  .hero .brand {
     font-family: 'Nanum Myeongjo', serif;
-    font-size: 15px; letter-spacing: 0.35em; color: var(--ink-soft);
-    cursor: pointer; user-select: none;
+    font-size: 34px; font-weight: 700; letter-spacing: 0.5em;
+    margin-left: 0.5em; /* letter-spacing 보정 */
   }
-  .hidden { display: none !important; }
-
-  /* ---------- 만들기 화면 ---------- */
-  .compose h1 {
-    font-family: 'Nanum Myeongjo', serif;
-    font-size: 26px; font-weight: 700; text-align: center;
-    margin: 40px 0 8px; line-height: 1.5;
+  .hero .tag {
+    margin-top: 18px; color: var(--ink-soft);
+    font-size: 14.5px; font-weight: 300; line-height: 2.1; letter-spacing: 0.04em;
   }
-  .compose .sub {
-    text-align: center; color: var(--ink-soft); font-size: 14px;
-    font-weight: 300; margin-bottom: 32px; line-height: 1.8;
+  .doors { display: flex; flex-direction: column; gap: 14px; }
+  .door {
+    display: flex; align-items: center; gap: 18px;
+    padding: 22px 22px;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--line); border-radius: 3px;
+    text-decoration: none; color: var(--ink);
+    transition: transform .25s, box-shadow .25s, border-color .25s;
   }
-  label { display: block; font-size: 13px; color: var(--ink-soft); margin: 24px 0 8px; letter-spacing: 0.08em; }
-  textarea, input[type=text] {
-    width: 100%;
-    font-family: 'Noto Serif KR', serif;
-    font-size: 16px; color: var(--ink);
-    background: transparent;
-    border: none; border-bottom: 1px solid var(--line);
-    padding: 8px 2px; line-height: 1.9;
-    resize: none; outline: none;
-    transition: border-color .3s;
+  .door:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent);
+    box-shadow: 0 14px 34px rgba(61,53,41,0.10);
   }
-  textarea:focus, input[type=text]:focus { border-color: var(--accent); }
-  textarea#poem { min-height: 150px; border: 1px solid var(--line); border-radius: 2px; padding: 16px; background: rgba(255,255,255,0.5); }
-  textarea#poem:focus { border-color: var(--accent); }
-  .notice {
-    margin-top: 10px; font-size: 12px; color: var(--ink-soft);
-    font-weight: 300; line-height: 1.8;
+  .door .ico { font-size: 30px; flex-shrink: 0; }
+  .door .t { font-family: 'Nanum Myeongjo', serif; font-size: 17px; font-weight: 700; }
+  .door .d { font-size: 13px; color: var(--ink-soft); font-weight: 300; margin-top: 5px; line-height: 1.8; }
+  .door .badge {
+    margin-left: auto; flex-shrink: 0;
+    font-size: 10.5px; letter-spacing: 0.12em; font-weight: 300;
+    color: var(--accent); border: 1px solid var(--accent);
+    border-radius: 999px; padding: 4px 10px;
   }
-  .notice b { color: var(--accent); font-weight: 400; }
-  .btn {
-    display: block; width: 100%;
-    margin-top: 40px; padding: 16px;
-    font-family: 'Noto Serif KR', serif; font-size: 16px; letter-spacing: 0.2em;
-    color: var(--paper); background: var(--ink);
-    border: none; border-radius: 2px; cursor: pointer;
-    transition: background .3s;
+  .pocket-door { margin-top: 26px; text-align: center; }
+  .pocket-door a {
+    color: var(--ink-soft); font-size: 13.5px; font-weight: 300;
+    text-decoration: none; letter-spacing: 0.1em;
+    border-bottom: 1px dashed var(--line); padding-bottom: 3px;
   }
-  .btn:hover { background: var(--accent); }
-  .btn.ghost {
-    background: transparent; color: var(--ink);
-    border: 1px solid var(--ink); margin-top: 16px;
-  }
-  .btn.ghost:hover { color: var(--accent); border-color: var(--accent); }
-  .btn.small { margin-top: 0; padding: 12px; font-size: 14px; }
-  .btn.small + .btn.small { margin-top: 10px; }
-
-  /* ---------- 카드 종이(템플릿) 고르기 ---------- */
-  .tpl-picker { display: flex; gap: 10px; }
-  .tpl {
-    flex: 1; border: 1px solid var(--line); border-radius: 3px; cursor: pointer;
-    padding: 8px; text-align: center; background: transparent; transition: border-color .25s;
-  }
-  .tpl:hover { border-color: var(--accent); }
-  .tpl .swatch { height: 44px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.05); }
-  .tpl .name { font-size: 12px; color: var(--ink-soft); margin-top: 7px; letter-spacing: 0.08em; }
-  .tpl.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
-  .tpl.on .name { color: var(--accent); }
-  .swatch.paper { background: linear-gradient(160deg, #fffdf8, #f3ecdf); }
-  .swatch.night {
-    background:
-      radial-gradient(1.5px 1.5px at 25% 30%, rgba(255,255,255,.8), transparent 60%),
-      radial-gradient(1px 1px at 70% 20%, rgba(255,255,255,.6), transparent 60%),
-      radial-gradient(1.5px 1.5px at 55% 65%, rgba(255,255,255,.7), transparent 60%),
-      linear-gradient(160deg, #232941, #141827);
-  }
-  .swatch.spring {
-    background:
-      radial-gradient(circle at 80% 20%, rgba(226,143,155,.35), transparent 45%),
-      radial-gradient(circle at 15% 80%, rgba(226,143,155,.25), transparent 45%),
-      linear-gradient(160deg, #fffafa, #f7e3e4);
-  }
-
-  /* ---------- 서재 화면 ---------- */
-  .library h1 {
-    font-family: 'Nanum Myeongjo', serif;
-    font-size: 24px; font-weight: 700; text-align: center;
-    margin: 40px 0 8px;
-  }
-  .library .sub {
-    text-align: center; color: var(--ink-soft); font-size: 13px;
-    font-weight: 300; margin-bottom: 24px; line-height: 1.9;
-  }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 20px; }
-  .chip {
-    font-family: 'Noto Serif KR', serif;
-    font-size: 13px; color: var(--ink-soft);
-    background: transparent; border: 1px solid var(--line); border-radius: 999px;
-    padding: 6px 14px; cursor: pointer; transition: all .25s;
-  }
-  .chip:hover { border-color: var(--accent); color: var(--accent); }
-  .chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-  .shelf-item {
-    padding: 20px 4px; border-bottom: 1px solid var(--line);
-    cursor: pointer; transition: background .2s;
-  }
-  .shelf-item:hover { background: rgba(255,255,255,0.5); }
-  .shelf-item .t { font-size: 16px; font-weight: 600; }
-  .shelf-item .a { font-size: 13px; color: var(--ink-soft); margin-top: 4px; font-weight: 300; }
-  .shelf-item .preview {
-    font-size: 13.5px; color: var(--ink-soft); margin-top: 10px;
-    font-weight: 300; line-height: 1.8;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-
-  /* ---------- 링크 완성 화면 ---------- */
-  .done { text-align: center; margin-top: 40px; }
-  .done h2 { font-family: 'Nanum Myeongjo', serif; font-size: 22px; margin-bottom: 12px; }
-  .done p { color: var(--ink-soft); font-size: 14px; line-height: 1.9; font-weight: 300; }
-  .qr-frame {
-    width: 216px; margin: 28px auto 0; padding: 16px;
-    background: #fff; border: 1px solid var(--line); border-radius: 3px;
-    box-shadow: 0 12px 32px rgba(61,53,41,0.08);
-  }
-  .qr-frame svg { display: block; width: 100%; height: auto; }
-  .qr-caption { margin-top: 10px; font-size: 11.5px; color: var(--ink-soft); letter-spacing: 0.1em; font-weight: 300; }
-  .linkbox {
-    margin: 24px 0 8px; padding: 14px;
-    background: rgba(255,255,255,0.6);
-    border: 1px dashed var(--line); border-radius: 2px;
-    font-size: 12px; color: var(--ink-soft);
-    word-break: break-all; text-align: left;
-    max-height: 76px; overflow: hidden;
-  }
-  .copied { color: var(--accent); font-size: 13px; height: 20px; }
-
-  /* ---------- 카드(받는) 화면 ---------- */
-  .envelope-scene { text-align: center; margin-top: 48px; perspective: 1200px; }
-  .envelope-scene .hint { color: var(--ink-soft); font-size: 14px; font-weight: 300; margin-top: 28px; letter-spacing: 0.1em; }
-  .pouch {
-    width: 180px; height: 200px; margin: 40px auto 0;
-    background: linear-gradient(160deg, #c9a37a, #b08a5e);
-    border-radius: 14px 14px 50% 50% / 14px 14px 30% 30%;
-    position: relative; cursor: pointer;
-    box-shadow: 0 18px 40px rgba(61,53,41,0.18);
-    transition: transform .4s;
-  }
-  .pouch:hover { transform: translateY(-6px) rotate(-1.5deg); }
-  .pouch::before {
-    content: ''; position: absolute; top: 26px; left: 12%; right: 12%;
-    border-top: 3px dashed rgba(61,53,41,0.35);
-  }
-  .pouch::after {
-    content: ''; position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
-    width: 60px; height: 24px;
-    border: 3px solid rgba(61,53,41,0.35); border-radius: 50%;
-    border-top: none;
-  }
-  .card-wrap { margin-top: 40px; }
-  .card {
-    background: #fffdf8;
-    border: 1px solid var(--line);
-    border-radius: 3px;
-    padding: 48px 32px 40px;
-    box-shadow: 0 24px 60px rgba(61,53,41,0.12);
-    text-align: center;
-    transform-origin: top center;
-    animation: unfold 1.1s cubic-bezier(.22,.9,.3,1) both;
-  }
-  @keyframes unfold {
-    0% { transform: rotateX(-88deg); opacity: 0; }
-    60% { opacity: 1; }
-    100% { transform: rotateX(0); opacity: 1; }
-  }
-  .card .poem-text {
-    font-size: 17px; line-height: 2.3; white-space: pre-wrap;
-    font-weight: 400;
-  }
-  .card .poem-author {
-    margin-top: 32px; font-size: 14px; color: var(--ink-soft); font-weight: 300;
-  }
-  .card .divider {
-    width: 32px; height: 1px; background: var(--line); margin: 36px auto;
-  }
-  .card .gift-note {
-    font-size: 14px; color: var(--ink-soft); line-height: 2; font-weight: 300;
-  }
-  .card .gift-from { margin-top: 8px; font-size: 13px; color: var(--accent); }
-
-  /* 템플릿: 밤하늘 */
-  .card.tpl-night {
-    background:
-      radial-gradient(1.5px 1.5px at 18% 12%, rgba(255,255,255,.75), transparent 60%),
-      radial-gradient(1px 1px at 82% 8%, rgba(255,255,255,.55), transparent 60%),
-      radial-gradient(1.5px 1.5px at 65% 22%, rgba(255,255,255,.65), transparent 60%),
-      radial-gradient(1px 1px at 35% 6%, rgba(255,255,255,.5), transparent 60%),
-      radial-gradient(1px 1px at 8% 55%, rgba(255,255,255,.4), transparent 60%),
-      radial-gradient(1.5px 1.5px at 92% 70%, rgba(255,255,255,.5), transparent 60%),
-      radial-gradient(1px 1px at 50% 90%, rgba(255,255,255,.45), transparent 60%),
-      linear-gradient(170deg, #232941, #171c2e);
-    border-color: #3a415c;
-    color: #ece7d9;
-  }
-  .card.tpl-night .poem-author, .card.tpl-night .gift-note { color: #a8aec7; }
-  .card.tpl-night .gift-from { color: #d9a45b; }
-  .card.tpl-night .divider { background: #3a415c; }
-
-  /* 템플릿: 봄빛 */
-  .card.tpl-spring {
-    background:
-      radial-gradient(circle at 90% 6%, rgba(226,143,155,.16), transparent 32%),
-      radial-gradient(circle at 6% 94%, rgba(226,143,155,.13), transparent 32%),
-      radial-gradient(circle at 20% 10%, rgba(240,180,120,.10), transparent 28%),
-      linear-gradient(170deg, #fffafa, #fbeff0);
-    border-color: #eed7d8;
-  }
-  .card.tpl-spring .gift-from { color: #c26d7a; }
-  .card.tpl-spring .divider { background: #eed7d8; }
-  .lineage {
-    margin-top: 28px; text-align: center;
-    font-size: 12.5px; color: var(--ink-soft); font-weight: 300; letter-spacing: 0.05em;
-  }
+  .pocket-door a:hover { color: var(--accent); border-color: var(--accent); }
   footer {
     padding: 24px; font-size: 11px; color: var(--ink-soft);
     letter-spacing: 0.2em; font-weight: 300; text-align: center; line-height: 2;
@@ -261,323 +82,33 @@
 </style>
 </head>
 <body>
-<header><div class="brand" onclick="location.hash=''; route()">주 머 니</div></header>
 <main>
-
-  <!-- 만들기 -->
-  <section id="view-compose" class="compose hidden">
-    <h1>마음 한 편을<br>건네보세요</h1>
-    <p class="sub">직접 쓴 문장, 혹은 서재의 시를 골라<br>건넬 수 있는 카드가 만들어져요</p>
-    <button class="btn ghost small" onclick="show('view-library')">📖 서재에서 시 고르기</button>
-    <button class="btn ghost small" onclick="openDaily()">📮 오늘의 시 우편함</button>
-    <button class="btn ghost small" onclick="location.href='chaek.html'">📚 느린 책 교환 방으로</button>
-    <button class="btn ghost small" onclick="location.href='post.html'">📮 편지 우체국으로 <span style="opacity:.6">(개국 준비 중)</span></button>
-    <button class="btn ghost small" onclick="location.href='map.html'">🗺 편지 지도로</button>
-    <label>시 · 문장</label>
-    <textarea id="poem" placeholder="직접 쓴 문장이나, 서재에서 고른 시가 이곳에 담겨요"></textarea>
-    <p class="notice">저작권 보호를 위해 <b>직접 쓴 글</b>이나 <b>서재의 시</b>(저작권 만료 작품)만 건넬 수 있어요.
-    다른 작가의 작품은 허락 없이 담지 말아주세요.</p>
-    <label>시인 · 출처 <span style="opacity:.6">(직접 쓴 글이면 비워두세요)</span></label>
-    <input type="text" id="author" placeholder="예) 윤동주, 「서시」">
-    <label>건네는 한마디 <span style="opacity:.6">(선택)</span></label>
-    <input type="text" id="note" placeholder="예) 오늘의 당신에게 어울리는 시예요">
-    <label>건네는 사람 <span style="opacity:.6">(선택)</span></label>
-    <input type="text" id="from" placeholder="예) 지나가던 사람">
-    <label>카드 종이</label>
-    <div class="tpl-picker" id="tpl-picker">
-      <div class="tpl on" data-tpl="paper" onclick="setTpl('paper')"><div class="swatch paper"></div><div class="name">미색 종이</div></div>
-      <div class="tpl" data-tpl="night" onclick="setTpl('night')"><div class="swatch night"></div><div class="name">밤하늘</div></div>
-      <div class="tpl" data-tpl="spring" onclick="setTpl('spring')"><div class="swatch spring"></div><div class="name">봄빛</div></div>
-    </div>
-    <button class="btn" onclick="makeCard()">카드 만들기</button>
-  </section>
-
-  <!-- 서재 -->
-  <section id="view-library" class="library hidden">
-    <h1>서재</h1>
-    <p class="sub">모두 저작권이 만료되어 자유롭게 건넬 수 있는 시예요<br>마음에 드는 시를 골라주세요</p>
-    <div class="chips" id="poet-chips"></div>
-    <div id="shelf"></div>
-    <button class="btn ghost" onclick="show('view-compose')">돌아가기</button>
-  </section>
-
-  <!-- 링크 완성 -->
-  <section id="view-done" class="done hidden">
-    <h2>카드가 준비됐어요</h2>
-    <p>링크를 보내거나, QR을 저장해<br>실물 주머니시에 붙여 건네보세요</p>
-    <div class="qr-frame">
-      <div id="qr"></div>
-      <div class="qr-caption">QR을 찍으면 카드가 열려요</div>
-    </div>
-    <div class="linkbox" id="share-link"></div>
-    <div class="copied" id="copied-msg"></div>
-    <button class="btn" onclick="copyLink()">링크 복사하기</button>
-    <button class="btn ghost" onclick="downloadQR()">QR 저장하기 (PNG · 인쇄용)</button>
-    <button class="btn ghost" onclick="openCard()">받는 사람의 눈으로 미리 보기</button>
-  </section>
-
-  <!-- 받기: 주머니 -->
-  <section id="view-envelope" class="envelope-scene hidden">
-    <div class="pouch" onclick="openPouch()"></div>
-    <p class="hint">누군가 당신에게 시 한 편을 건넸어요<br>주머니를 열어보세요</p>
-  </section>
-
-  <!-- 받기: 카드 -->
-  <section id="view-card" class="card-wrap hidden">
-    <div class="card">
-      <div class="poem-text" id="card-poem"></div>
-      <div class="poem-author" id="card-author"></div>
-      <div class="divider"></div>
-      <div class="gift-note" id="card-note"></div>
-      <div class="gift-from" id="card-from"></div>
-    </div>
-    <div class="lineage" id="card-lineage"></div>
-    <button class="btn ghost" onclick="passOn()">나도 한 편 건네기</button>
-  </section>
-
+  <div class="hero">
+    <div class="brand">주머니</div>
+    <p class="tag">모르는 사람과, 느린 방식으로,<br>시와 책과 편지를 주고받는 집</p>
+  </div>
+  <nav class="doors">
+    <a class="door" href="si.html">
+      <span class="ico">📜</span>
+      <span><span class="t">건네는 시</span><span class="d" style="display:block">시 한 편을 카드로 만들어, 링크와 QR로 건네요</span></span>
+    </a>
+    <a class="door" href="chaek.html">
+      <span class="ico">📚</span>
+      <span><span class="t">느린 책 교환</span><span class="d" style="display:block">책 한 권과, 다 읽은 뒤에야 열리는 봉인 편지</span></span>
+    </a>
+    <a class="door" href="post.html">
+      <span class="ico">📮</span>
+      <span><span class="t">편지 우체국</span><span class="d" style="display:block">이름도 얼굴도 모른 채, 필명으로만 오가는 편지</span></span>
+      <span class="badge">개국 준비 중</span>
+    </a>
+    <a class="door" href="map.html">
+      <span class="ico">🗺️</span>
+      <span><span class="t">편지 지도</span><span class="d" style="display:block">장소에 편지를 남기면, 지나던 사람이 주워요</span></span>
+    </a>
+  </nav>
+  <div class="pocket-door"><a href="pocket.html">🧺 내 주머니 열어보기 — 건넨 것과 주운 것들</a></div>
 </main>
-<footer>JUMEONI · POCKET POEMS<br>서재의 시는 모두 저작권 보호기간이 만료된 작품입니다<br><a href="chaek.html" style="color:inherit">느린 책 교환 →</a> · <a href="post.html" style="color:inherit">편지 우체국 →</a> · <a href="map.html" style="color:inherit">편지 지도 →</a></footer>
-
-<script>
-  // 서재: 저작권 보호기간이 만료된 시인들의 작품만 수록한다.
-  // 김소월(1934), 이상(1937), 한용운(1944), 이육사(1944), 윤동주(1945), 정지용(1950), 김영랑(1950)
-  const LIBRARY = [
-    {
-      t: '서시', poet: '윤동주', a: '윤동주, 「서시」',
-      p: '죽는 날까지 하늘을 우러러\n한 점 부끄럼이 없기를,\n잎새에 이는 바람에도\n나는 괴로워했다.\n별을 노래하는 마음으로\n모든 죽어 가는 것을 사랑해야지\n그리고 나한테 주어진 길을\n걸어가야겠다.\n\n오늘 밤에도 별이 바람에 스치운다.'
-    },
-    {
-      t: '새로운 길', poet: '윤동주', a: '윤동주, 「새로운 길」',
-      p: '내를 건너서 숲으로\n고개를 넘어서 마을로\n\n어제도 가고 오늘도 갈\n나의 길 새로운 길\n\n민들레가 피고 까치가 날고\n아가씨가 지나고 바람이 일고\n\n나의 길은 언제나 새로운 길\n오늘도… 내일도…\n\n내를 건너서 숲으로\n고개를 넘어서 마을로'
-    },
-    {
-      t: '눈', poet: '윤동주', a: '윤동주, 「눈」',
-      p: '지난밤에\n눈이 소오복이 왔네\n\n지붕이랑\n길이랑 밭이랑\n추워한다고\n덮어 주는 이불인가 봐\n\n그러기에\n추운 겨울에만 내리지'
-    },
-    {
-      t: '진달래꽃', poet: '김소월', a: '김소월, 「진달래꽃」',
-      p: '나 보기가 역겨워\n가실 때에는\n말없이 고이 보내 드리우리다\n\n영변에 약산\n진달래꽃\n아름 따다 가실 길에 뿌리우리다\n\n가시는 걸음걸음\n놓인 그 꽃을\n사뿐히 즈려밟고 가시옵소서\n\n나 보기가 역겨워\n가실 때에는\n죽어도 아니 눈물 흘리우리다'
-    },
-    {
-      t: '먼 후일', poet: '김소월', a: '김소월, 「먼 후일」',
-      p: '먼 훗날 당신이 찾으시면\n그때에 내 말이 "잊었노라"\n\n당신이 속으로 나무라면\n"무척 그리다가 잊었노라"\n\n그래도 당신이 나무라면\n"믿기지 않아서 잊었노라"\n\n오늘도 어제도 아니 잊고\n먼 훗날 그때에 "잊었노라"'
-    },
-    {
-      t: '엄마야 누나야', poet: '김소월', a: '김소월, 「엄마야 누나야」',
-      p: '엄마야 누나야 강변 살자\n뜰에는 반짝이는 금모래빛\n뒷문 밖에는 갈잎의 노래\n엄마야 누나야 강변 살자'
-    },
-    {
-      t: '산유화', poet: '김소월', a: '김소월, 「산유화」',
-      p: '산에는 꽃 피네\n꽃이 피네\n갈 봄 여름 없이\n꽃이 피네\n\n산에\n산에\n피는 꽃은\n저만치 혼자서 피어 있네\n\n산에서 우는 작은 새여\n꽃이 좋아\n산에서\n사노라네\n\n산에는 꽃 지네\n꽃이 지네\n갈 봄 여름 없이\n꽃이 지네'
-    },
-    {
-      t: '호수 1', poet: '정지용', a: '정지용, 「호수 1」',
-      p: '얼굴 하나야\n손바닥 둘로\n폭 가리지만,\n\n보고 싶은 마음\n호수만 하니\n눈 감을 밖에.'
-    },
-    {
-      t: '돌담에 속삭이는 햇발', poet: '김영랑', a: '김영랑, 「돌담에 속삭이는 햇발」',
-      p: '돌담에 속삭이는 햇발같이\n풀 아래 웃음 짓는 샘물같이\n내 마음 고요히 고운 봄 길 위에\n오늘 하루 하늘을 우러르고 싶다\n\n새악시 볼에 떠오는 부끄럼같이\n시의 가슴에 살포시 젖는 물결같이\n보드레한 에메랄드 얇게 흐르는\n실비단 하늘을 바라보고 싶다'
-    },
-    {
-      t: '모란이 피기까지는', poet: '김영랑', a: '김영랑, 「모란이 피기까지는」',
-      p: '모란이 피기까지는\n나는 아직 나의 봄을 기다리고 있을 테요\n모란이 뚝뚝 떨어져 버린 날\n나는 비로소 봄을 여읜 설움에 잠길 테요\n오월 어느 날 그 하루 무덥던 날\n떨어져 누운 꽃잎마저 시들어 버리고는\n천지에 모란은 자취도 없어지고\n뻗쳐 오르던 내 보람 서운케 무너졌느니\n모란이 지고 말면 그뿐 내 한 해는 다 가고 말아\n삼백예순 날 하냥 섭섭해 우옵네다\n모란이 피기까지는\n나는 아직 기다리고 있을 테요 찬란한 슬픔의 봄을'
-    },
-    {
-      t: '사랑하는 까닭', poet: '한용운', a: '한용운, 「사랑하는 까닭」',
-      p: '내가 당신을 사랑하는 것은 까닭이 없는 것이 아닙니다\n다른 사람들은 나의 홍안만을 사랑하지마는\n당신은 나의 백발도 사랑하는 까닭입니다\n\n내가 당신을 그리워하는 것은 까닭이 없는 것이 아닙니다\n다른 사람들은 나의 미소만을 사랑하지마는\n당신은 나의 눈물도 사랑하는 까닭입니다\n\n내가 당신을 기다리는 것은 까닭이 없는 것이 아닙니다\n다른 사람들은 나의 건강만을 사랑하지마는\n당신은 나의 죽음도 사랑하는 까닭입니다'
-    },
-    {
-      t: '나룻배와 행인', poet: '한용운', a: '한용운, 「나룻배와 행인」',
-      p: '나는 나룻배\n당신은 행인\n\n당신은 흙발로 나를 짓밟습니다\n나는 당신을 안고 물을 건너갑니다\n나는 당신을 안으면 깊으나 얕으나 급한 여울이나 건너갑니다\n\n만일 당신이 아니 오시면 나는 바람을 쐬고 눈비를 맞으며\n밤에서 낮까지 당신을 기다리고 있습니다\n당신은 물만 건너면 나를 돌아보지도 않고 가십니다그려\n그러나 당신이 언제든지 오실 줄만은 알아요\n나는 당신을 기다리면서 날마다 날마다 낡아 갑니다\n\n나는 나룻배\n당신은 행인'
-    },
-    {
-      t: '청포도', poet: '이육사', a: '이육사, 「청포도」',
-      p: '내 고장 칠월은\n청포도가 익어 가는 시절\n\n이 마을 전설이 주저리주저리 열리고\n먼 데 하늘이 꿈꾸며 알알이 들어와 박혀\n\n하늘 밑 푸른 바다가 가슴을 열고\n흰 돛단배가 곱게 밀려서 오면\n\n내가 바라는 손님은 고달픈 몸으로\n청포를 입고 찾아온다고 했으니\n\n내 그를 맞아 이 포도를 따 먹으면\n두 손은 함뿍 적셔도 좋으련\n\n아이야 우리 식탁엔 은쟁반에\n하이얀 모시 수건을 마련해 두렴'
-    }
-  ];
-
-  // 카드 데이터는 서버 없이 URL 해시에 담는다.
-  // 새 링크: #z=<lz-string 압축> (짧아서 QR이 성글게 나온다)
-  // 구 링크: #c=<base64(json)> 도 계속 읽을 수 있다.
-  function encodeCard(data) {
-    const json = JSON.stringify(data);
-    if (window.LZString) return 'z=' + LZString.compressToEncodedURIComponent(json);
-    return 'c=' + btoa(String.fromCharCode(...new TextEncoder().encode(json)));
-  }
-  function decodeCard(kind, s) {
-    try {
-      if (kind === 'z') return JSON.parse(LZString.decompressFromEncodedURIComponent(s));
-      const bytes = Uint8Array.from(atob(s), c => c.charCodeAt(0));
-      return JSON.parse(new TextDecoder().decode(bytes));
-    } catch { return null; }
-  }
-
-  let currentLink = '';
-  let currentCard = null;
-  let currentPoet = '전체';
-  let lastQR = null;
-  let selectedTpl = 'paper';
-
-  function setTpl(t) {
-    selectedTpl = t;
-    document.querySelectorAll('.tpl').forEach(e => e.classList.toggle('on', e.dataset.tpl === t));
-  }
-
-  // 오늘의 시 우편함: 날짜에 따라 서재에서 한 편이 도착한다 (모두에게 같은 시)
-  function openDaily() {
-    const today = new Date();
-    const days = Math.floor(today.getTime() / 86400000);
-    const x = LIBRARY[days % LIBRARY.length];
-    currentCard = null;  // 우편함의 시는 계보를 시작하지 않은 상태로 본다
-    renderCard({ p: x.p, a: x.a, n: '', f: '', g: 1 });
-    document.getElementById('card-lineage').textContent =
-      `${today.getMonth() + 1}월 ${today.getDate()}일 · 오늘의 시가 당신에게 닿았어요`;
-    show('view-card');
-    window.scrollTo(0, 0);
-  }
-
-  // ---------- 서재 ----------
-  function renderChips() {
-    const poets = ['전체', ...new Set(LIBRARY.map(x => x.poet))];
-    document.getElementById('poet-chips').innerHTML = poets.map(p =>
-      `<button class="chip ${p === currentPoet ? 'on' : ''}" onclick="filterPoet('${p}')">${p}</button>`).join('');
-  }
-  function filterPoet(p) { currentPoet = p; renderChips(); renderShelf(); }
-  function renderShelf() {
-    const list = LIBRARY.filter(x => currentPoet === '전체' || x.poet === currentPoet);
-    document.getElementById('shelf').innerHTML = list.map(x => `
-      <div class="shelf-item" onclick="pickPoem('${x.t}')">
-        <div class="t">${x.t}</div>
-        <div class="a">${x.poet}</div>
-        <div class="preview">${x.p.split('\n')[0]}</div>
-      </div>`).join('');
-  }
-  function pickPoem(title) {
-    const x = LIBRARY.find(y => y.t === title);
-    if (!x) return;
-    document.getElementById('poem').value = x.p;
-    document.getElementById('author').value = x.a;
-    show('view-compose');
-    window.scrollTo(0, 0);
-  }
-
-  // ---------- 카드 만들기 ----------
-  function makeCard() {
-    const poem = document.getElementById('poem').value.trim();
-    if (!poem) { document.getElementById('poem').focus(); return; }
-    const data = {
-      p: poem,
-      a: document.getElementById('author').value.trim(),
-      n: document.getElementById('note').value.trim(),
-      f: document.getElementById('from').value.trim(),
-      g: (currentCard ? (currentCard.g || 1) + 1 : 1),  // 계보: 몇 번째 손인지
-      tp: selectedTpl
-    };
-    currentLink = location.origin + location.pathname + '#' + encodeCard(data);
-    document.getElementById('share-link').textContent = currentLink;
-    document.getElementById('copied-msg').textContent = '';
-    renderQR(currentLink);
-    show('view-done');
-  }
-
-  // ---------- QR ----------
-  function renderQR(link) {
-    const el = document.getElementById('qr');
-    lastQR = null;
-    el.innerHTML = '';
-    if (typeof qrcode === 'undefined') {
-      el.innerHTML = '<div style="font-size:12px;color:var(--ink-soft);padding:20px 0">QR 생성기를 불러오지 못했어요.<br>링크로 건네주세요.</div>';
-      return;
-    }
-    for (const ec of ['M', 'L']) {  // 내용이 길면 오류정정 수준을 낮춰 한 번 더 시도
-      try {
-        const qr = qrcode(0, ec);
-        qr.addData(link);
-        qr.make();
-        el.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
-        lastQR = qr;
-        return;
-      } catch (e) { /* 다음 수준으로 */ }
-    }
-    el.innerHTML = '<div style="font-size:12px;color:var(--ink-soft);padding:20px 0">시가 너무 길어 QR을 만들 수 없어요.<br>링크로 건네주세요.</div>';
-  }
-
-  function downloadQR() {
-    if (!lastQR) return;
-    const n = lastQR.getModuleCount();
-    const cell = 16, quiet = cell * 4;           // 인쇄 권장 여백(quiet zone) 4모듈
-    const size = n * cell + quiet * 2;
-    const cv = document.createElement('canvas');
-    cv.width = cv.height = size;
-    const ctx = cv.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, size, size);
-    ctx.fillStyle = '#3d3529';
-    for (let r = 0; r < n; r++)
-      for (let c = 0; c < n; c++)
-        if (lastQR.isDark(r, c)) ctx.fillRect(quiet + c * cell, quiet + r * cell, cell, cell);
-    const a = document.createElement('a');
-    a.href = cv.toDataURL('image/png');
-    a.download = 'jumeoni-qr.png';
-    a.click();
-  }
-
-  // ---------- 공유 · 열람 ----------
-  function copyLink() {
-    navigator.clipboard.writeText(currentLink).then(() => {
-      document.getElementById('copied-msg').textContent = '복사됐어요. 이제 건네기만 하면 돼요.';
-    });
-  }
-
-  function openCard() { location.href = currentLink; route(); }
-
-  function openPouch() {
-    renderCard(currentCard);
-    show('view-card');
-  }
-
-  function renderCard(d) {
-    const cardEl = document.querySelector('#view-card .card');
-    cardEl.className = 'card' + (d.tp && d.tp !== 'paper' ? ' tpl-' + d.tp : '');
-    document.querySelector('#view-card .divider').style.display = (d.n || d.f) ? '' : 'none';
-    document.getElementById('card-poem').textContent = d.p;
-    document.getElementById('card-author').textContent = d.a ? '— ' + d.a : '';
-    document.getElementById('card-note').textContent = d.n || '';
-    document.getElementById('card-from').textContent = d.f ? d.f + ' 드림' : '';
-    const g = d.g || 1;
-    document.getElementById('card-lineage').textContent =
-      g > 1 ? `이 시는 ${g}번째 손을 거쳐 당신에게 닿았어요` : '이 시가 처음으로 당신에게 닿았어요';
-  }
-
-  function passOn() {
-    // 계보를 이어받은 채 만들기 화면으로
-    document.getElementById('poem').value = '';
-    document.getElementById('author').value = '';
-    document.getElementById('note').value = '';
-    document.getElementById('from').value = '';
-    show('view-compose');
-    window.scrollTo(0, 0);
-  }
-
-  function show(id) {
-    ['view-compose','view-library','view-done','view-envelope','view-card'].forEach(v =>
-      document.getElementById(v).classList.toggle('hidden', v !== id));
-  }
-
-  function route() {
-    const m = location.hash.match(/^#(z|c)=(.+)$/);
-    if (m) {
-      const d = decodeCard(m[1], m[2]);
-      if (d && d.p) { currentCard = d; show('view-envelope'); return; }
-    }
-    currentCard = null;
-    show('view-compose');
-  }
-
-  renderChips();
-  renderShelf();
-  window.addEventListener('hashchange', route);
-  route();
-</script>
+<footer>JUMEONI · A HOUSE OF SLOW THINGS</footer>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
 </body>
 </html>

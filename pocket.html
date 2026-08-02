@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>주머니 — 내 주머니</title>
+<meta name="description" content="내가 건넨 것들과 주운 것들이 모이는 곳.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧺</text></svg>">
+<meta name="theme-color" content="#faf6ef">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf6ef;
+    --ink: #3d3529;
+    --ink-soft: #8a7f6d;
+    --accent: #b0563c;
+    --blue: #3a5a8c;
+    --line: #e2d9c8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Serif KR', serif;
+    background: var(--paper); color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
+    background-image: radial-gradient(circle at 20% 10%, rgba(176,86,60,0.04), transparent 40%),
+                      radial-gradient(circle at 80% 90%, rgba(120,110,90,0.05), transparent 40%);
+  }
+  main { width: 100%; max-width: 520px; padding: 40px 24px 80px; flex: 1; }
+  header { text-align: center; padding-top: 24px; }
+  .brand {
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: 15px; letter-spacing: 0.35em; color: var(--ink-soft);
+    cursor: pointer; user-select: none;
+  }
+  .room-name { font-size: 11px; letter-spacing: 0.25em; color: var(--accent); margin-top: 6px; font-weight: 300; }
+
+  .me { text-align: center; margin: 40px 0 8px; }
+  .me .pen { font-family: 'Nanum Myeongjo', serif; font-size: 26px; font-weight: 700; }
+  .me .seek { margin-top: 10px; font-size: 13px; color: var(--ink-soft); font-weight: 300; }
+  .me .none { font-size: 14px; color: var(--ink-soft); font-weight: 300; line-height: 2; }
+  .me .none a { color: var(--accent); }
+
+  h2 {
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: 16px; font-weight: 700;
+    margin: 44px 0 4px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  h2 .cnt { font-size: 12px; color: var(--ink-soft); font-weight: 300; }
+  .empty { padding: 18px 2px; font-size: 13px; color: var(--ink-soft); font-weight: 300; }
+  .item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 15px 2px; border-bottom: 1px solid rgba(226,217,200,0.6);
+  }
+  .item .ico { font-size: 20px; flex-shrink: 0; }
+  .item .t { font-size: 14.5px; }
+  .item .d { font-size: 12px; color: var(--ink-soft); font-weight: 300; margin-top: 3px; }
+  .item .act {
+    margin-left: auto; flex-shrink: 0;
+    font-family: 'Noto Serif KR', serif;
+    font-size: 12px; color: var(--ink-soft);
+    background: transparent; border: 1px solid var(--line); border-radius: 999px;
+    padding: 5px 12px; cursor: pointer; transition: all .25s;
+  }
+  .item .act:hover { color: var(--accent); border-color: var(--accent); }
+  .badge {
+    display: inline-block; font-size: 10.5px; letter-spacing: 0.1em;
+    color: var(--blue); border: 1px solid var(--blue); border-radius: 2px;
+    padding: 2px 6px; margin-left: 8px; vertical-align: middle;
+  }
+  .copied-toast {
+    position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%);
+    background: var(--ink); color: var(--paper);
+    font-size: 12.5px; font-weight: 300; letter-spacing: 0.08em;
+    padding: 10px 18px; border-radius: 2px;
+    opacity: 0; transition: opacity .4s; pointer-events: none;
+  }
+  .copied-toast.show { opacity: 1; }
+  footer {
+    padding: 24px; font-size: 11px; color: var(--ink-soft);
+    letter-spacing: 0.2em; font-weight: 300; text-align: center; line-height: 2.2;
+  }
+  footer a { color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand" onclick="location.href='index.html'">주 머 니</div>
+  <div class="room-name">내 주머니</div>
+</header>
+<main>
+  <div class="me" id="me"></div>
+
+  <h2>건넨 것들 <span class="cnt" id="cnt-given"></span></h2>
+  <div id="list-given"></div>
+
+  <h2>책상 서랍 — 부친 편지 <span class="cnt" id="cnt-drawer"></span></h2>
+  <div id="list-drawer"></div>
+
+  <h2>지도에 남긴 편지 <span class="cnt" id="cnt-map"></span></h2>
+  <div id="list-map"></div>
+
+  <h2>보관한 마음 <span class="cnt" id="cnt-likes"></span></h2>
+  <div id="list-likes"></div>
+</main>
+<div class="copied-toast" id="toast">링크를 복사했어요</div>
+<footer>
+  JUMEONI · MY POCKET<br>
+  <a href="index.html">대문으로 →</a> · <a href="si.html">건네는 시 →</a> · <a href="chaek.html">느린 책 교환 →</a> · <a href="post.html">편지 우체국 →</a> · <a href="map.html">편지 지도 →</a>
+</footer>
+<script>
+  const $ = id => document.getElementById(id);
+  const read = (k, fb) => { try { return JSON.parse(localStorage.getItem(k)) ?? fb; } catch { return fb; } };
+  const fmt = ts => { const d = new Date(ts); return `${d.getMonth() + 1}월 ${d.getDate()}일`; };
+  const esc = s => String(s).replace(/</g, '&lt;');
+
+  // 나
+  const pen = localStorage.getItem('jumeoni_pen');
+  const seek = localStorage.getItem('jumeoni_seek');
+  $('me').innerHTML = pen
+    ? `<div class="pen">${esc(pen)}</div><div class="seek">찾고 있는 인연 — ${esc(seek || '아직 몰라요')}</div>`
+    : `<div class="none">아직 필명이 없어요.<br><a href="post.html">우체국</a>에서 필명을 지으면 이곳에 걸려요.</div>`;
+
+  function copyLink(link) {
+    navigator.clipboard.writeText(link).then(() => {
+      const t = $('toast');
+      t.classList.add('show');
+      clearTimeout(t._h);
+      t._h = setTimeout(() => t.classList.remove('show'), 2200);
+    });
+  }
+
+  function fill(listId, cntId, arr, emptyMsg, render) {
+    $(cntId).textContent = arr.length ? arr.length + '개' : '';
+    $(listId).innerHTML = arr.length
+      ? arr.map(render).join('')
+      : `<div class="empty">${emptyMsg}</div>`;
+  }
+
+  // 건넨 것들 (시·책·손글씨)
+  const given = read('jumeoni_given', []);
+  const ICO = { poem: '📜', book: '📚', hand: '✍️' };
+  fill('list-given', 'cnt-given', given,
+    '아직 건넨 것이 없어요. <a href="si.html" style="color:var(--accent)">시 한 편</a>부터 건네볼까요.',
+    (g, i) => `<div class="item">
+      <span class="ico">${ICO[g.k] || '📜'}</span>
+      <span><span class="t">${esc(g.t || '이름 없는 카드')}</span><span class="d" style="display:block">${fmt(g.at)}${g.k === 'hand' ? ' · 손글씨 (이미지로 건넴)' : ''}</span></span>
+      ${g.link ? `<button class="act" onclick="copyLink('${g.link.replace(/'/g, "\\'")}')">링크 복사</button>` : ''}
+    </div>`);
+
+  // 책상 서랍
+  const drawer = read('jumeoni_drawer', []);
+  fill('list-drawer', 'cnt-drawer', [...drawer].reverse(),
+    '부친 편지가 없어요. <a href="post.html" style="color:var(--accent)">우체국</a>에서 한 통 부쳐보세요.',
+    d => `<div class="item">
+      <span class="ico">✉️</span>
+      <span><span class="t">${esc(d.t.split('\n')[0].slice(0, 30))}</span><span class="d" style="display:block">${fmt(d.at)} 부침${d.age ? ` · ${d.age === 3 ? '사흘' : '이레'} 묵힘` : ''}</span></span>
+      ${d.age ? '<span class="badge">묵힌 편지</span>' : ''}
+    </div>`);
+
+  // 지도에 남긴 편지
+  const mapLetters = read('jumeoni_map_letters', []);
+  fill('list-map', 'cnt-map', [...mapLetters].reverse(),
+    '지도에 남긴 편지가 없어요. <a href="map.html" style="color:var(--accent)">지도</a>에 한 통 놓아볼까요.',
+    d => `<div class="item">
+      <span class="ico">📍</span>
+      <span><span class="t">${esc(d.body.split('\n')[0].slice(0, 30))}</span><span class="d" style="display:block">위도 ${d.lat.toFixed(3)} · 경도 ${d.lng.toFixed(3)}</span></span>
+    </div>`);
+
+  // 보관한 마음
+  const likes = read('jumeoni_likes', []);
+  fill('list-likes', 'cnt-likes', likes,
+    '보관한 마음이 없어요. 지도에서 마음에 드는 편지를 만나면 이곳에 담겨요.',
+    w => `<div class="item">
+      <span class="ico">🕊️</span>
+      <span><span class="t">${esc(w)}</span><span class="d" style="display:block">개국하면 첫 편지가 배달돼요</span></span>
+    </div>`);
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>

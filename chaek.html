@@ -8,6 +8,8 @@
 <meta property="og:title" content="주머니 — 느린 책 교환">
 <meta property="og:description" content="누군가 당신에게 책 한 권을 건넸어요. 다 읽으면 편지를 열 수 있어요.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+<meta name="theme-color" content="#faf6ef">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
 <script src="lib/qrcode.min.js"></script>
@@ -218,7 +220,7 @@
   <section id="view-compose" class="hidden">
     <h1>책 한 권과<br>봉인 편지를 건네보세요</h1>
     <p class="sub">책을 추천하면서 편지를 함께 봉인해요<br>편지는 상대가 책을 다 읽은 뒤에야 열 수 있어요</p>
-    <button class="btn ghost small" onclick="location.href='index.html'">📜 건네는 시 방으로</button>
+    <button class="btn ghost small" onclick="location.href='si.html'">📜 건네는 시 방으로</button>
     <label>책 제목</label>
     <input type="text" id="book" placeholder="예) 어린 왕자">
     <label>지은이</label>
@@ -283,15 +285,44 @@
       <div class="letter hidden" id="letter-body"></div>
     </div>
 
+    <button class="btn ghost" onclick="togglePostcard()">📬 읽는 중이라고, 엽서 한 장 보내기</button>
+    <div id="postcard-panel" class="hidden" style="margin-top:18px;padding:20px;background:rgba(255,255,255,0.55);border:1px solid var(--line);border-radius:3px">
+      <p style="font-size:13px;color:var(--ink-soft);font-weight:300;line-height:1.9">다 읽기 전에도 안부는 보낼 수 있어요.<br>짧은 엽서 링크를 만들어 건네준 사람에게 보내보세요.</p>
+      <label>어디까지 왔나요</label>
+      <input type="text" id="pc-progress" placeholder="예) 68쪽, 절반쯤, 사막 장면">
+      <label>한마디 <span style="opacity:.6">(선택)</span></label>
+      <input type="text" id="pc-msg" placeholder="예) 여기서 한참 머물렀어요">
+      <label>보내는 이 <span style="opacity:.6">(선택)</span></label>
+      <input type="text" id="pc-from" placeholder="예) 당신의 독자">
+      <button class="btn" style="margin-top:24px" onclick="makePostcard()">엽서 링크 만들기</button>
+      <div class="linkbox hidden" id="pc-linkbox"></div>
+      <div class="copied" id="pc-copied"></div>
+      <button class="btn ghost hidden" id="pc-copy-btn" onclick="copyPostcard()">엽서 링크 복사하기</button>
+    </div>
     <div class="lineage" id="card-lineage"></div>
     <button class="btn ghost" onclick="passOn()">나도 책 한 권 건네기</button>
+  </section>
+
+  <!-- 받기: 중간 엽서 -->
+  <section id="view-postcard" class="card-wrap hidden">
+    <div class="card" style="padding:40px 28px">
+      <div class="book-label">읽는 중입니다</div>
+      <div class="book-title" id="pcv-book" style="font-size:20px"></div>
+      <div class="divider"></div>
+      <div class="book-reason" style="text-align:center" id="pcv-progress"></div>
+      <div class="book-reason" style="text-align:center;color:var(--ink-soft);margin-top:14px" id="pcv-msg"></div>
+      <div class="gift-from" id="pcv-from"></div>
+    </div>
+    <div class="lineage">봉인 편지는 아직 열리지 않았어요 — 조금만 더 기다려주세요</div>
+    <button class="btn ghost" onclick="location.hash=''; route()">나도 책 한 권 건네기</button>
   </section>
 
 </main>
 <footer>
   JUMEONI · SLOW BOOK EXCHANGE<br>
-  <a href="index.html">건네는 시 →</a> · <a href="post.html">편지 우체국 →</a> · <a href="map.html">편지 지도 →</a>
+  <a href="index.html">대문으로 →</a> · <a href="si.html">건네는 시 →</a> · <a href="post.html">편지 우체국 →</a> · <a href="pocket.html">내 주머니 →</a>
 </footer>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
 
 <script>
   // 꾸러미 데이터는 서버 없이 URL 해시에 담는다. #z=<lz-string 압축>
@@ -332,6 +363,9 @@
     document.getElementById('share-link').textContent = currentLink;
     document.getElementById('copied-msg').textContent = '';
     renderQR(currentLink);
+    const given = JSON.parse(localStorage.getItem('jumeoni_given') || '[]');
+    given.unshift({ k: 'book', t: data.b, link: currentLink, at: Date.now() });
+    localStorage.setItem('jumeoni_given', JSON.stringify(given.slice(0, 100)));
     show('view-done');
     window.scrollTo(0, 0);
   }
@@ -408,6 +442,10 @@
     document.getElementById('letter-body').classList.add('hidden');
     document.getElementById('seal-confirm').classList.add('hidden');
     document.getElementById('wax').classList.remove('hidden');
+    // 엽서 패널 초기화
+    document.getElementById('postcard-panel').classList.add('hidden');
+    document.getElementById('pc-linkbox').classList.add('hidden');
+    document.getElementById('pc-copy-btn').classList.add('hidden');
     updateSealMsg(d);
   }
 
@@ -451,16 +489,58 @@
     window.scrollTo(0, 0);
   }
 
+  // ---------- 중간 엽서 ----------
+  let postcardLink = '';
+
+  function togglePostcard() {
+    document.getElementById('postcard-panel').classList.toggle('hidden');
+  }
+
+  function makePostcard() {
+    const pr = document.getElementById('pc-progress').value.trim();
+    if (!pr) { document.getElementById('pc-progress').focus(); return; }
+    const data = {
+      pb: currentParcel ? currentParcel.b : '',
+      pr,
+      m: document.getElementById('pc-msg').value.trim(),
+      f: document.getElementById('pc-from').value.trim()
+    };
+    postcardLink = location.origin + location.pathname + '#p=' +
+      LZString.compressToEncodedURIComponent(JSON.stringify(data));
+    const box = document.getElementById('pc-linkbox');
+    box.textContent = postcardLink;
+    box.classList.remove('hidden');
+    document.getElementById('pc-copy-btn').classList.remove('hidden');
+    document.getElementById('pc-copied').textContent = '';
+  }
+
+  function copyPostcard() {
+    navigator.clipboard.writeText(postcardLink).then(() => {
+      document.getElementById('pc-copied').textContent = '복사됐어요. 건네준 사람에게 보내보세요.';
+    });
+  }
+
+  function renderPostcard(d) {
+    document.getElementById('pcv-book').textContent = d.pb ? `『${d.pb}』` : '건네받은 책';
+    document.getElementById('pcv-progress').textContent = d.pr;
+    document.getElementById('pcv-msg').textContent = d.m || '';
+    document.getElementById('pcv-from').textContent = d.f ? d.f + ' 드림' : '';
+  }
+
   function show(id) {
-    ['view-compose','view-done','view-parcel','view-card'].forEach(v =>
+    ['view-compose','view-done','view-parcel','view-card','view-postcard'].forEach(v =>
       document.getElementById(v).classList.toggle('hidden', v !== id));
   }
 
   function route() {
-    const m = location.hash.match(/^#z=(.+)$/);
-    if (m) {
-      const d = decodeParcel(m[1]);
+    const m = location.hash.match(/^#(z|p)=(.+)$/);
+    if (m && m[1] === 'z') {
+      const d = decodeParcel(m[2]);
       if (d && d.b) { currentParcel = d; show('view-parcel'); return; }
+    }
+    if (m && m[1] === 'p') {
+      const d = decodeParcel(m[2]);
+      if (d && d.pr) { renderPostcard(d); show('view-postcard'); return; }
     }
     currentParcel = null;
     show('view-compose');

@@ -8,6 +8,8 @@
 <meta property="og:title" content="주머니 — 편지 우체국">
 <meta property="og:description" content="바다 건너 누군가에게, 하루에 한 번 편지가 배달돼요.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📮</text></svg>">
+<meta name="theme-color" content="#f5efe2">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -231,18 +233,21 @@
 오늘 이곳의 날씨부터 이야기해볼까요…"></textarea>
       <div class="letter-meta"><span class="penname" id="write-sign"></span> 올림</div>
     </div>
+    <label>부치는 방법 <span style="opacity:.6">— 오래 생각한 편지에는 특별한 소인이 찍혀요</span></label>
+    <div class="chips" id="age-chips">
+      <button class="chip on" data-age="0" onclick="setAge(0)">바로 부치기</button>
+      <button class="chip" data-age="3" onclick="setAge(3)">사흘 묵히기</button>
+      <button class="chip" data-age="7" onclick="setAge(7)">이레 묵히기</button>
+    </div>
     <button class="btn" onclick="sendLetter()">부치기</button>
     <button class="btn ghost" onclick="go('home')">로비로 돌아가기</button>
   </section>
 
   <!-- 부침 완료 -->
   <section id="view-sent" class="hidden">
-    <div class="sent-note">
+    <div class="sent-note" id="sent-note">
       <span class="big">편지를 부쳤어요 🕊️</span>
-      우체국이 개국하면, 이 편지는 내일 아침 아홉 시<br>
-      바다 건너 누군가의 우편함에 닿아요.<br><br>
-      지금은 개국 준비 중이라 <b>내 책상 서랍</b>에 고이 보관해뒀어요.<br>
-      개국 소식이 오면 가장 먼저 배달될 거예요.
+      <span id="sent-body"></span>
     </div>
     <button class="btn ghost" onclick="go('home')">로비로 돌아가기</button>
   </section>
@@ -286,8 +291,9 @@
 </main>
 <footer>
   JUMEONI · SLOW POST OFFICE<br>
-  <a href="index.html">건네는 시 →</a> · <a href="chaek.html">느린 책 교환 →</a> · <a href="map.html">편지 지도 →</a>
+  <a href="index.html">대문으로 →</a> · <a href="si.html">건네는 시 →</a> · <a href="chaek.html">느린 책 교환 →</a> · <a href="pocket.html">내 주머니 →</a>
 </footer>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
 
 <script>
   const NAMES = ['능소화','첫차','밤편지','소나기','은하수','달그림자','종이비행기','우표수집가','간이역','풍금','수국','새벽안개','자개장','청자','바다유리','흑백사진','손목시계','유리병편지','매화','목련'];
@@ -343,13 +349,29 @@
     return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`;
   }
 
+  let ageDays = 0;
+  function setAge(d) {
+    ageDays = d;
+    document.querySelectorAll('#age-chips .chip').forEach(e =>
+      e.classList.toggle('on', Number(e.dataset.age) === d));
+  }
+
   function sendLetter() {
     const text = $('letter-text').value.trim();
     if (!text) { $('letter-text').focus(); return; }
     const drawer = store.drawer;
-    drawer.push({ t: text, at: Date.now() });
+    drawer.push({ t: text, at: Date.now(), age: ageDays });
     store.drawer = drawer;
     $('letter-text').value = '';
+    $('sent-body').innerHTML = ageDays > 0
+      ? `이 편지는 <b>${ageDays === 3 ? '사흘을' : '이레를'}</b> 묵힌 뒤에 부쳐질 거예요.<br>
+         오래 생각하고 보낸 편지에는 "묵힘" 소인이 찍혀요.<br><br>
+         지금은 개국 준비 중이라 <b>내 책상 서랍</b>에 고이 보관해뒀어요.`
+      : `우체국이 개국하면, 이 편지는 내일 아침 아홉 시<br>
+         바다 건너 누군가의 우편함에 닿아요.<br><br>
+         지금은 개국 준비 중이라 <b>내 책상 서랍</b>에 고이 보관해뒀어요.<br>
+         개국 소식이 오면 가장 먼저 배달될 거예요.`;
+    setAge(0);
     go('sent');
   }
 
