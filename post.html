@@ -179,6 +179,71 @@
   }
   .sent-note .big { font-family: 'Nanum Myeongjo', serif; font-size: 21px; color: var(--ink); display: block; margin-bottom: 10px; }
 
+  /* ---------- 오늘의 질문 ---------- */
+  .daily-q {
+    margin: 26px 0 6px; padding: 22px 20px;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid var(--line); border-radius: 3px;
+  }
+  .daily-q .dq-label { font-size: 11px; letter-spacing: 0.25em; color: var(--blue); }
+  .daily-q .dq-text { font-family: 'Nanum Myeongjo', serif; font-size: 16.5px; font-weight: 700; margin-top: 10px; line-height: 1.8; }
+  .daily-q .dq-hint { font-size: 12px; color: var(--ink-soft); font-weight: 300; margin-top: 10px; line-height: 1.8; }
+  .daily-q input { margin-top: 6px; }
+  .daily-q .dq-saved { font-size: 12.5px; color: var(--red); margin-top: 10px; height: 18px; font-weight: 300; }
+
+  /* ---------- 여정 (연프 흐름) ---------- */
+  .stage-bar { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 26px 0 6px; }
+  .stage-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: transparent; border: 1.5px solid var(--line);
+    position: relative;
+  }
+  .stage-dot.done { background: var(--ink); border-color: var(--ink); }
+  .stage-dot.mile { width: 16px; height: 16px; border-color: var(--red); }
+  .stage-dot.mile.done { background: var(--red); border-color: var(--red); }
+  .stage-caption { text-align: center; font-size: 12px; color: var(--ink-soft); font-weight: 300; margin-bottom: 18px; letter-spacing: 0.05em; }
+  .stage-caption b { color: var(--red); font-weight: 400; }
+
+  .thread { display: flex; flex-direction: column; gap: 14px; }
+  .bubble {
+    max-width: 86%; padding: 16px 18px;
+    border: 1px solid var(--line); border-radius: 3px;
+    font-size: 14px; line-height: 2.1; font-weight: 300; white-space: pre-wrap;
+  }
+  .bubble .b-who { font-size: 11.5px; letter-spacing: 0.1em; margin-bottom: 8px; font-weight: 400; }
+  .bubble.them { align-self: flex-start; background: var(--letter); }
+  .bubble.them .b-who { color: var(--red); }
+  .bubble.me { align-self: flex-end; background: rgba(58,90,140,0.06); }
+  .bubble.me .b-who { color: var(--blue); text-align: right; }
+  .bubble.locked {
+    align-self: flex-start; background: transparent; border-style: dashed;
+    color: var(--ink-soft); text-align: center; font-size: 12.5px;
+  }
+  .bubble.locked .unlock {
+    display: inline-block; margin-top: 8px; font-size: 12px; color: var(--blue);
+    border-bottom: 1px dashed var(--blue); cursor: pointer;
+  }
+  .milestone {
+    border: 1px solid var(--red); border-radius: 3px;
+    padding: 22px 20px; text-align: center; background: rgba(176,86,60,0.04);
+  }
+  .milestone .m-title { font-family: 'Nanum Myeongjo', serif; font-size: 16px; font-weight: 700; color: var(--red); }
+  .milestone .m-body { font-size: 13px; color: var(--ink); font-weight: 300; line-height: 2; margin-top: 10px; }
+  .qa-pair { margin-top: 14px; text-align: left; }
+  .qa-pair .qa-q { font-size: 12px; color: var(--ink-soft); letter-spacing: 0.05em; margin-top: 12px; }
+  .qa-pair .qa-vs { display: flex; gap: 10px; margin-top: 5px; }
+  .qa-pair .qa-vs span {
+    flex: 1; font-size: 13.5px; padding: 8px 10px;
+    background: rgba(255,255,255,0.6); border: 1px solid var(--line); border-radius: 2px;
+  }
+  .qa-pair .qa-vs span:last-child { border-color: rgba(176,86,60,0.4); }
+  .composer { margin-top: 22px; }
+  .composer textarea {
+    min-height: 90px; border: 1px solid var(--line); border-radius: 2px;
+    padding: 14px; background: rgba(255,255,255,0.5); font-size: 14px;
+  }
+  .journey-status { text-align: center; font-size: 13px; color: var(--ink-soft); font-weight: 300; line-height: 2; margin-top: 16px; }
+
   footer {
     padding: 24px; font-size: 11px; color: var(--ink-soft);
     letter-spacing: 0.2em; font-weight: 300; text-align: center; line-height: 2.2;
@@ -214,10 +279,78 @@
   <section id="view-home" class="hidden">
     <h1 id="greet">어서 오세요</h1>
     <p class="sub" id="greet-sub">오늘도 바다 건너 어딘가에서<br>당신의 편지를 기다리는 사람이 있어요</p>
+    <div class="daily-q">
+      <div class="dq-label">오늘의 질문</div>
+      <div class="dq-text" id="dq-text"></div>
+      <div class="dq-hint">답해두면 오늘 부치는 편지에 동봉할 수 있어요 — 상대가 당신을 알아가는 실마리가 돼요</div>
+      <input type="text" id="dq-answer" placeholder="한 줄로 답해보세요">
+      <div class="dq-saved" id="dq-saved"></div>
+      <button class="btn ghost small" style="margin-top:12px" onclick="saveDaily()">답 적어두기</button>
+    </div>
+    <button class="btn ghost small" onclick="openJourney()">💌 매화와의 여정 <span style="opacity:.6">(연프 체험)</span></button>
     <button class="btn ghost small" onclick="go('write')">✉️ 편지 부치기</button>
+    <button class="btn ghost small" onclick="go('answers')">📝 나의 취향 문답 <span style="opacity:.6">(세 통째에 서로 공개돼요)</span></button>
     <button class="btn ghost small" onclick="go('inbox')">📪 받은 우편함 <span style="opacity:.6">(견본)</span></button>
     <button class="btn ghost small" onclick="location.href='map.html'">🗺 편지 지도로 가기</button>
     <button class="btn ghost small" onclick="go('rules')">📜 우체국의 규칙</button>
+  </section>
+
+  <!-- 취향 문답 -->
+  <section id="view-answers" class="hidden">
+    <h1>나의 취향 문답</h1>
+    <p class="sub">편지를 세 통 주고받으면, 우체국이 서로의 문답을 열어줘요<br>이름도 얼굴도 없는 대신 — 이런 것들로 서로를 알아가요</p>
+    <label>나는</label>
+    <div class="chips" data-key="chrono">
+      <button class="chip" data-v="새벽형">새벽형 인간</button>
+      <button class="chip" data-v="저녁형">저녁형 인간</button>
+    </div>
+    <label>마음이 기우는 계절</label>
+    <div class="chips" data-key="season">
+      <button class="chip" data-v="봄">봄</button>
+      <button class="chip" data-v="여름">여름</button>
+      <button class="chip" data-v="가을">가을</button>
+      <button class="chip" data-v="겨울">겨울</button>
+    </div>
+    <label>여행은</label>
+    <div class="chips" data-key="travel">
+      <button class="chip" data-v="계획파">촘촘한 계획파</button>
+      <button class="chip" data-v="즉흥파">발길 닿는 대로</button>
+    </div>
+    <label>지친 날의 위로</label>
+    <div class="chips" data-key="comfort">
+      <button class="chip" data-v="음악">음악</button>
+      <button class="chip" data-v="책">책</button>
+      <button class="chip" data-v="음식">따뜻한 음식</button>
+      <button class="chip" data-v="걷기">오래 걷기</button>
+    </div>
+    <label>요즘 나를 웃게 하는 것</label>
+    <input type="text" id="ans-free" placeholder="한 줄로 적어주세요">
+    <button class="btn" onclick="saveAnswers()">문답 봉해두기</button>
+    <button class="btn ghost" onclick="go('home')">로비로 돌아가기</button>
+  </section>
+
+  <!-- 매화와의 여정 -->
+  <section id="view-journey" class="hidden">
+    <h1>매화와의 여정</h1>
+    <p class="sub">개국하면 낯선 상대와 이렇게 이어져요 — 지금은 우체국 유령 필명<br><b style="color:var(--red);font-weight:400">매화</b> 님과 체험판으로 걸어봐요</p>
+    <div class="stage-bar" id="stage-bar"></div>
+    <div class="stage-caption" id="stage-caption"></div>
+    <div class="thread" id="thread"></div>
+    <div class="composer" id="composer">
+      <textarea id="reply-text" placeholder="매화 님에게 답장을 써보세요"></textarea>
+      <button class="btn" style="margin-top:14px" onclick="sendReply()">답장 부치기</button>
+    </div>
+    <div class="journey-status" id="journey-status"></div>
+    <div class="milestone hidden" id="meet-panel" style="margin-top:18px">
+      <div class="m-title">만남 신청</div>
+      <div class="m-body">일곱 통이 오갔어요. 어떤 인연으로 만나고 싶나요?<br>상대도 원할 때만 성사되고, 거절 이유는 전해지지 않아요.</div>
+      <div class="chips" id="meet-chips" style="justify-content:center;margin-top:14px">
+        <button class="chip" onclick="requestMeet('벗')">벗으로</button>
+        <button class="chip" onclick="requestMeet('연인')">연인으로</button>
+        <button class="chip" onclick="requestMeet('모임')">모임으로</button>
+      </div>
+    </div>
+    <button class="btn ghost" onclick="go('home')">로비로 돌아가기</button>
   </section>
 
   <!-- 편지 쓰기 -->
@@ -233,6 +366,7 @@
 오늘 이곳의 날씨부터 이야기해볼까요…"></textarea>
       <div class="letter-meta"><span class="penname" id="write-sign"></span> 올림</div>
     </div>
+    <button class="btn ghost small hidden" id="attach-daily" style="margin-top:14px" onclick="attachDaily()">📎 오늘의 문답 동봉하기</button>
     <label>부치는 방법 <span style="opacity:.6">— 오래 생각한 편지에는 특별한 소인이 찍혀요</span></label>
     <div class="chips" id="age-chips">
       <button class="chip on" data-age="0" onclick="setAge(0)">바로 부치기</button>
@@ -401,17 +535,193 @@
     go('read');
   }
 
+  // ---------- 오늘의 질문 ----------
+  const QUESTIONS = [
+    '어릴 때 살던 집에서 가장 또렷이 기억나는 곳은 어디인가요?',
+    '요즘 자기 전에 무슨 생각을 하나요?',
+    '비 오는 날, 당신은 어떤 사람이 되나요?',
+    '아무에게도 말한 적 없지만 사실 좋아하는 것 하나는?',
+    '오늘 하루 중 가장 오래 머문 생각은 무엇이었나요?',
+    '당신을 오래 아는 사람들은 당신을 뭐라고 부르나요?',
+    '언젠가 꼭 다시 가고 싶은 장소가 있나요?',
+    '첫눈이 오면 제일 먼저 떠오르는 사람은 누구인가요?',
+    '요즘 배우고 싶은 것이 있다면요?',
+    '스무 살의 나에게 한 문장을 보낼 수 있다면?',
+    '당신의 하루에서 가장 조용한 시간은 언제인가요?',
+    '가장 최근에 소리 내어 웃은 건 무엇 때문이었나요?',
+    '오래 간직하고 있는 물건이 있나요? 왜 버리지 못했나요?',
+    '지금 창밖에는 무엇이 보이나요?'
+  ];
+  const dayIdx = Math.floor(Date.now() / 86400000);
+  const todayQ = QUESTIONS[dayIdx % QUESTIONS.length];
+
+  function renderDaily() {
+    $('dq-text').textContent = todayQ;
+    const d = read('jumeoni_daily', null);
+    if (d && d.d === dayIdx) {
+      $('dq-answer').value = d.a;
+      $('dq-saved').textContent = '봉해뒀어요 — 오늘 편지에 동봉할 수 있어요';
+    } else {
+      $('dq-answer').value = '';
+      $('dq-saved').textContent = '';
+    }
+  }
+  function saveDaily() {
+    const a = $('dq-answer').value.trim();
+    if (!a) { $('dq-answer').focus(); return; }
+    localStorage.setItem('jumeoni_daily', JSON.stringify({ d: dayIdx, q: todayQ, a }));
+    $('dq-saved').textContent = '봉해뒀어요 — 오늘 편지에 동봉할 수 있어요';
+    updateAttachBtn();
+  }
+  function read(k, fb) { try { return JSON.parse(localStorage.getItem(k)) ?? fb; } catch { return fb; } }
+
+  function updateAttachBtn() {
+    const d = read('jumeoni_daily', null);
+    $('attach-daily').classList.toggle('hidden', !(d && d.d === dayIdx));
+  }
+  function attachDaily() {
+    const d = read('jumeoni_daily', null);
+    if (!d) return;
+    const t = $('letter-text');
+    t.value = (t.value ? t.value + '\n\n' : '') + `— 오늘의 질문: ${d.q}\n나의 답: ${d.a}`;
+  }
+
+  // ---------- 취향 문답 ----------
+  const answerSel = {};
+  document.querySelectorAll('.chips[data-key]').forEach(group => {
+    group.querySelectorAll('.chip').forEach(c => {
+      c.onclick = () => {
+        answerSel[group.dataset.key] = c.dataset.v;
+        group.querySelectorAll('.chip').forEach(e => e.classList.toggle('on', e === c));
+      };
+    });
+  });
+  function loadAnswers() {
+    const a = read('jumeoni_answers', {});
+    document.querySelectorAll('.chips[data-key]').forEach(group => {
+      const v = a[group.dataset.key];
+      if (v) { answerSel[group.dataset.key] = v; }
+      group.querySelectorAll('.chip').forEach(e => e.classList.toggle('on', e.dataset.v === v));
+    });
+    $('ans-free').value = a.free || '';
+  }
+  function saveAnswers() {
+    const a = { ...answerSel, free: $('ans-free').value.trim() };
+    localStorage.setItem('jumeoni_answers', JSON.stringify(a));
+    go('home');
+  }
+
+  // ---------- 매화와의 여정 ----------
+  const MAEHWA_ANSWERS = { chrono: '새벽형', season: '봄', travel: '즉흥파', comfort: '책', free: '골목 매화나무에 날아와 앉는 직박구리' };
+  const QA_LABELS = { chrono: '나는', season: '마음이 기우는 계절', travel: '여행은', comfort: '지친 날의 위로', free: '요즘 나를 웃게 하는 것' };
+  const MAEHWA = [
+    '처음 뵙겠습니다.\n\n필명을 매화로 지은 건, 제가 사는 골목에 매화나무가 한 그루 있기 때문이에요. 꽃이 피면 온 골목이 환해져요.\n\n당신의 필명에는 어떤 사연이 있나요? 다음 편지에서 들려주세요.',
+    '답장을 읽고 오래 생각했어요. 모르는 사람의 문장이 이렇게 반가울 수 있다는 걸 처음 알았어요.\n\n오늘은 골목 얘기를 하나 할게요. 매화나무에 요즘 직박구리 한 마리가 와요. 시끄러운데, 이상하게 정이 들었어요.\n\n당신의 하루 중 가장 좋아하는 시간은 언제인가요?',
+    '벌써 우리 사이에 편지가 다섯 통이네요.\n\n우체국이 서로의 문답을 열어줬을 때, 당신의 답을 몇 번이나 읽었는지 몰라요. 겹치는 게 있어서 웃었고, 다른 게 있어서 더 궁금해졌어요.\n\n다른 건 그대로 두고, 겹치는 것부터 얘기해볼까요?',
+    '당신의 편지를 기다리는 게 아침 습관이 됐어요. 아홉 시가 되면 우편함부터 열어봐요.\n\n이제 일곱 통이에요. 우체국 규칙으로는 만남을 신청할 수 있는 사이가 됐네요.\n\n서두를 것 없어요. 다만 알아두세요 — 저는 이 여정이 어디로 가든, 이미 좋았어요.'
+  ];
+
+  function journey() { return read('jumeoni_journey', []); }
+  function saveJourney(j) { localStorage.setItem('jumeoni_journey', JSON.stringify(j)); }
+  function mCount(j) { return j.filter(x => x.w === 'm').length; }
+
+  function openJourney() {
+    let j = journey();
+    if (!j.length) { j = [{ w: 'm', t: MAEHWA[0], at: Date.now() }]; saveJourney(j); }
+    go('journey');
+  }
+
+  function renderJourney() {
+    const j = journey();
+    const total = j.length;
+    // 단계 게이지
+    let dots = '';
+    for (let i = 1; i <= 7; i++) {
+      const mile = (i === 3 || i === 7) ? ' mile' : '';
+      dots += `<div class="stage-dot${mile}${i <= total ? ' done' : ''}"></div>`;
+    }
+    $('stage-bar').innerHTML = dots;
+    $('stage-caption').innerHTML =
+      total >= 7 ? '일곱 통 — <b>만남을 신청할 수 있어요</b>'
+      : total >= 3 ? `${total}통째 — <b>서로의 문답이 열렸어요</b> · 일곱 통이 되면 만남 신청`
+      : `${total}통째 — 세 통이 되면 서로의 문답이 열려요`;
+
+    // 스레드
+    const my = read('jumeoni_answers', null);
+    let html = '';
+    j.forEach((x, i) => {
+      html += `<div class="bubble ${x.w === 'm' ? 'them' : 'me'}"><div class="b-who">${x.w === 'm' ? '매화' : (store.pen || '나')}</div>${esc(x.t)}</div>`;
+      // 세 통째 뒤에 문답 개방 카드
+      if (i === 2 && total >= 3) {
+        html += `<div class="milestone"><div class="m-title">세 통째 — 우체국이 문답을 열었어요</div>`;
+        if (my) {
+          html += `<div class="qa-pair">` + Object.keys(QA_LABELS).map(k => `
+            <div class="qa-q">${QA_LABELS[k]}</div>
+            <div class="qa-vs"><span>${esc(my[k] || '아직 답 안 함')} — ${esc(store.pen || '나')}</span><span>${esc(MAEHWA_ANSWERS[k])} — 매화</span></div>`).join('') + `</div>`;
+        } else {
+          html += `<div class="m-body">아직 나의 문답을 쓰지 않았어요.<br><a href="#" onclick="go('answers');return false" style="color:var(--red)">지금 쓰러 가기 →</a></div>`;
+        }
+        html += `</div>`;
+      }
+    });
+    // 다음 편지 잠금
+    const last = j[j.length - 1];
+    const pending = last && last.w === 'me' && mCount(j) < MAEHWA.length;
+    if (pending) {
+      html += `<div class="bubble locked">매화 님의 답장 — 내일 아침 아홉 시 도착<br><span class="unlock" onclick="unlockNext()">체험판이라 미리 열어볼 수 있어요 →</span></div>`;
+    }
+    $('thread').innerHTML = html;
+    $('composer').classList.toggle('hidden', pending || total >= 7);
+
+    // 만남 신청
+    const meet = read('jumeoni_meet', null);
+    $('meet-panel').classList.toggle('hidden', !(total >= 7 && !meet));
+    $('journey-status').innerHTML = meet
+      ? `<b style="color:var(--red);font-weight:400">${esc(meet.as)}</b>(으)로 만남을 신청했어요 🕊️<br>개국하면 상대에게 전해지고, 양쪽이 원할 때만 성사돼요.`
+      : (pending ? '매화 님의 답장이 오는 중이에요' : '');
+  }
+
+  function esc(s) { return String(s).replace(/</g, '&lt;'); }
+
+  function sendReply() {
+    const t = $('reply-text').value.trim();
+    if (!t) { $('reply-text').focus(); return; }
+    const j = journey();
+    j.push({ w: 'me', t, at: Date.now() });
+    saveJourney(j);
+    $('reply-text').value = '';
+    renderJourney();
+  }
+
+  function unlockNext() {
+    const j = journey();
+    const next = MAEHWA[mCount(j)];
+    if (!next) return;
+    j.push({ w: 'm', t: next, at: Date.now() });
+    saveJourney(j);
+    renderJourney();
+  }
+
+  function requestMeet(as) {
+    localStorage.setItem('jumeoni_meet', JSON.stringify({ to: '매화', as, at: Date.now() }));
+    renderJourney();
+  }
+
   function go(view) {
-    ['onboard','home','write','sent','inbox','read','rules'].forEach(v =>
+    ['onboard','home','write','sent','inbox','read','rules','answers','journey'].forEach(v =>
       $('view-' + v).classList.toggle('hidden', v !== view));
     if (view === 'home') {
       $('greet').textContent = store.pen ? `${store.pen} 님, 어서 오세요` : '어서 오세요';
+      renderDaily();
     }
     if (view === 'write') {
       $('write-sign').textContent = store.pen || '이름 없는 발신인';
       $('postmark-date').textContent = fmtToday();
+      updateAttachBtn();
     }
     if (view === 'inbox') renderInbox();
+    if (view === 'answers') loadAnswers();
+    if (view === 'journey') renderJourney();
     window.scrollTo(0, 0);
   }
 
