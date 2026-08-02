@@ -1,6 +1,7 @@
 // 주머니 서비스 워커 — 정적 자산 캐시로 오프라인·재방문을 빠르게
-const CACHE = 'jumeoni-v2';
+const CACHE = 'jumeoni-v3';
 const CORE = [
+  './theme.css',
   './',
   './index.html',
   './si.html',
