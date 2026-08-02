@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>주머니 — 편지 지도</title>
+<meta name="description" content="장소에 편지를 남기고, 그곳을 지나는 낯선 사람이 줍는 지도.">
+<meta property="og:title" content="주머니 — 편지 지도">
+<meta property="og:description" content="이 벤치에, 이 골목에, 누군가 편지를 두고 갔어요.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --paper: #f5efe2;
+    --letter: #fbf7ec;
+    --ink: #3d3529;
+    --ink-soft: #8a7f6d;
+    --red: #b0563c;
+    --blue: #3a5a8c;
+    --line: #ddd2bd;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Noto Serif KR', serif;
+    background: var(--paper); color: var(--ink);
+    display: flex; flex-direction: column;
+    height: 100vh; overflow: hidden;
+  }
+  header { text-align: center; padding: 18px 16px 12px; flex-shrink: 0; }
+  .brand {
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: 14px; letter-spacing: 0.35em; color: var(--ink-soft);
+    cursor: pointer; user-select: none;
+  }
+  .room-name { font-size: 10.5px; letter-spacing: 0.25em; color: var(--red); margin-top: 5px; font-weight: 300; }
+  .beta {
+    padding: 7px 14px; text-align: center;
+    font-size: 11.5px; color: var(--ink-soft); font-weight: 300;
+    border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line);
+    background: rgba(255,255,255,0.5); flex-shrink: 0; line-height: 1.7;
+  }
+  .beta b { color: var(--red); font-weight: 400; }
+  #map { flex: 1; }
+  .leaflet-container { font-family: 'Noto Serif KR', serif; background: #ece5d4; }
+
+  /* 팝업 편지 */
+  .leaflet-popup-content-wrapper {
+    background: var(--letter); color: var(--ink);
+    border-radius: 3px; border: 1px solid var(--line);
+    box-shadow: 0 16px 40px rgba(61,53,41,0.25);
+  }
+  .leaflet-popup-content { margin: 18px 18px 14px; width: 240px !important; }
+  .leaflet-popup-tip { background: var(--letter); }
+  .pop-pen { font-family: 'Nanum Myeongjo', serif; font-size: 15px; font-weight: 700; }
+  .pop-place { font-size: 11.5px; color: var(--ink-soft); font-weight: 300; margin-top: 2px; }
+  .pop-body {
+    margin-top: 12px; font-size: 13px; line-height: 2.1;
+    white-space: pre-wrap; font-weight: 300;
+    max-height: 190px; overflow-y: auto;
+  }
+  .pop-actions { margin-top: 14px; }
+  .pop-btn {
+    display: block; width: 100%;
+    font-family: 'Noto Serif KR', serif; font-size: 12.5px; letter-spacing: 0.1em;
+    padding: 9px; cursor: pointer; border-radius: 2px; text-align: center;
+    border: 1px solid var(--ink); background: var(--ink); color: var(--letter);
+    transition: background .3s;
+  }
+  .pop-btn:hover { background: var(--red); border-color: var(--red); }
+  .pop-note { margin-top: 9px; font-size: 11px; color: var(--ink-soft); font-weight: 300; line-height: 1.8; text-align: center; }
+  .pop-note b { color: var(--red); font-weight: 400; }
+
+  /* 아래 안내바 + 쓰기 패널 */
+  .bottombar {
+    flex-shrink: 0; padding: 12px 16px;
+    background: var(--paper); border-top: 1px solid var(--line);
+    display: flex; gap: 10px; align-items: center; justify-content: center;
+  }
+  .bar-btn {
+    font-family: 'Noto Serif KR', serif; font-size: 13.5px; letter-spacing: 0.1em;
+    padding: 11px 18px; cursor: pointer; border-radius: 2px;
+    border: 1px solid var(--ink); background: var(--ink); color: var(--letter);
+    transition: background .3s;
+  }
+  .bar-btn:hover { background: var(--red); border-color: var(--red); }
+  .bar-btn.ghost { background: transparent; color: var(--ink); }
+  .bar-btn.ghost:hover { color: var(--red); border-color: var(--red); }
+  .bar-btn.armed { background: var(--red); border-color: var(--red); color: var(--letter); }
+  .bar-hint { font-size: 12px; color: var(--ink-soft); font-weight: 300; }
+
+  .write-panel {
+    position: absolute; left: 50%; bottom: 84px; transform: translateX(-50%);
+    width: min(420px, calc(100vw - 32px));
+    background: var(--letter); border: 1px solid var(--line); border-radius: 3px;
+    box-shadow: 0 20px 50px rgba(61,53,41,0.3);
+    padding: 20px; z-index: 1200;
+  }
+  .write-panel h3 { font-family: 'Nanum Myeongjo', serif; font-size: 16px; margin-bottom: 4px; }
+  .write-panel .wp-place { font-size: 12px; color: var(--ink-soft); font-weight: 300; margin-bottom: 12px; }
+  .write-panel textarea {
+    width: 100%; min-height: 96px;
+    font-family: 'Noto Serif KR', serif; font-size: 14px; color: var(--ink);
+    line-height: 2; border: 1px solid var(--line); border-radius: 2px;
+    background: rgba(255,255,255,0.6); padding: 12px; resize: none; outline: none;
+  }
+  .write-panel textarea:focus { border-color: var(--red); }
+  .write-panel .wp-row { display: flex; gap: 8px; margin-top: 12px; }
+  .write-panel .wp-row .pop-btn { flex: 1; }
+  .write-panel .pop-btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .toast {
+    position: absolute; left: 50%; top: 18px; transform: translateX(-50%);
+    background: var(--ink); color: var(--letter);
+    font-size: 12.5px; letter-spacing: 0.08em; font-weight: 300;
+    padding: 10px 18px; border-radius: 2px; z-index: 1300;
+    box-shadow: 0 10px 26px rgba(61,53,41,0.35);
+    opacity: 0; transition: opacity .4s; pointer-events: none;
+    max-width: calc(100vw - 32px); text-align: center; line-height: 1.8;
+  }
+  .toast.show { opacity: 1; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand" onclick="location.href='index.html'">주 머 니</div>
+  <div class="room-name">편지 지도</div>
+</header>
+<div class="beta">체험판 — 지금 남기는 편지는 <b>이 기기에만</b> 보여요 · 우체국이 개국하면 모두의 지도에 함께 떠요</div>
+<div id="map"></div>
+<div class="bottombar">
+  <button class="bar-btn" id="drop-btn" onclick="armDrop()">✉️ 이곳에 편지 남기기</button>
+  <button class="bar-btn ghost" onclick="location.href='post.html'">📮 우체국으로</button>
+  <span class="bar-hint" id="bar-hint"></span>
+</div>
+
+<div class="write-panel hidden" id="write-panel">
+  <h3>이 자리에 편지를 남겨요</h3>
+  <div class="wp-place" id="wp-place"></div>
+  <textarea id="wp-text" placeholder="이곳을 지나는 낯선 누군가에게…"></textarea>
+  <div class="wp-row">
+    <button class="pop-btn" onclick="dropLetter()">놓아두기</button>
+    <button class="pop-btn ghost" onclick="cancelDrop()">그만두기</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  // 씨앗 편지: 개국 전에도 지도가 비어 보이지 않도록, 견본 편지 몇 통을 놓아둔다.
+  const SEED = [
+    { lat: 37.5658, lng: 126.9752, pen: '돌담', place: '덕수궁 돌담길', body: '이 길을 함께 걸으면 헤어진다는 말이 있죠.\n저는 오늘 혼자 걸었으니, 누군가와 다시 걸을 일만 남았네요.\n\n이 편지를 주운 당신은, 누구와 걷고 있나요?' },
+    { lat: 37.5133, lng: 127.0002, pen: '밤강', place: '반포 한강공원', body: '밤의 강은 낮보다 말이 많아요.\n다리 불빛이 물에 풀리는 걸 보다가, 문득 모르는 사람에게 편지가 쓰고 싶어졌어요.\n\n당신도 지금 강을 보고 있나요?' },
+    { lat: 35.1587, lng: 129.1604, pen: '바다유리', place: '해운대 바닷가', body: '파도에 깎여 둥글어진 유리조각을 주웠어요.\n모난 것도 오래 구르면 보석이 되나 봐요.\n\n이 근처에 계신다면, 오늘 바다 한 번 보고 가세요.' },
+    { lat: 35.8151, lng: 127.1521, pen: '풍금', place: '전주 한옥마을', body: '기와지붕 사이로 해가 지는 걸 보며 씁니다.\n이 골목 끝 찻집의 대추차가 아주 좋아요.\n\n따뜻한 걸 마시면, 하고 싶던 말이 잘 떠오르거든요.' },
+    { lat: 48.8527, lng: 2.3470, pen: 'Bouquiniste', place: '파리 · 센 강변 헌책방', body: '(우체국이 번역해 드렸어요)\n\n강변에서 오래된 시집을 한 권 샀어요. 속표지에 1954년의 헌사가 적혀 있어요.\n\n70년 전의 편지를 오늘 제가 주웠으니, 이 편지도 언젠가 누군가 줍겠죠.' },
+    { lat: 35.6959, lng: 139.7578, pen: '古本', place: '도쿄 진보초 책방거리', body: '(우체국이 번역해 드렸어요)\n\n헌책방 골목의 종이 냄새를 좋아해요. 오래된 책 냄새는 어느 나라나 비슷하네요.\n\n당신의 도시에도 이런 골목이 있나요?' }
+  ];
+
+  const $ = id => document.getElementById(id);
+  const myLetters = JSON.parse(localStorage.getItem('jumeoni_map_letters') || '[]');
+  const pen = localStorage.getItem('jumeoni_pen') || '';
+
+  const map = L.map('map', { zoomControl: true }).setView([36.5, 127.8], 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  function letterPopup(d, mine) {
+    const actions = mine
+      ? `<div class="pop-note">내가 남긴 편지예요 · 개국하면 모두의 지도에 떠요</div>`
+      : `<div class="pop-actions"><button class="pop-btn" onclick="askTalk('${d.pen.replace(/'/g, "\\'")}')">이 편지가 마음에 들어요 — 대화 신청</button></div>
+         <div class="pop-note">개국하면 <b>${d.pen}</b> 님의 우편함으로 배달돼요</div>`;
+    return `<div class="pop-pen">${d.pen}</div>
+      <div class="pop-place">${d.place || '지도 위 어딘가'}</div>
+      <div class="pop-body">${d.body.replace(/</g,'&lt;')}</div>${actions}`;
+  }
+
+  function addMarker(d, mine) {
+    const m = L.circleMarker([d.lat, d.lng], {
+      radius: 9,
+      color: mine ? '#3a5a8c' : '#b0563c',
+      weight: 2,
+      fillColor: mine ? '#6d8cbb' : '#c97a5f',
+      fillOpacity: 0.85
+    }).addTo(map);
+    m.bindPopup(letterPopup(d, mine), { maxWidth: 280 });
+    return m;
+  }
+
+  SEED.forEach(d => addMarker(d, false));
+  myLetters.forEach(d => addMarker(d, true));
+
+  function toast(msg) {
+    const t = $('toast');
+    t.innerHTML = msg;
+    t.classList.add('show');
+    clearTimeout(t._h);
+    t._h = setTimeout(() => t.classList.remove('show'), 3200);
+  }
+
+  function askTalk(who) {
+    map.closePopup();
+    const likes = JSON.parse(localStorage.getItem('jumeoni_likes') || '[]');
+    if (!likes.includes(who)) { likes.push(who); localStorage.setItem('jumeoni_likes', JSON.stringify(likes)); }
+    toast(`마음을 보관했어요 🕊️<br>우체국이 개국하면 ${who} 님에게 첫 편지가 배달돼요`);
+  }
+
+  // 편지 남기기
+  let armed = false;
+  let pendingLatLng = null;
+
+  function armDrop() {
+    armed = !armed;
+    $('drop-btn').classList.toggle('armed', armed);
+    $('bar-hint').textContent = armed ? '지도에서 편지를 놓을 자리를 눌러주세요' : '';
+    if (!armed) hidePanel();
+  }
+
+  map.on('click', e => {
+    if (!armed) return;
+    pendingLatLng = e.latlng;
+    $('wp-place').textContent = `위도 ${e.latlng.lat.toFixed(4)} · 경도 ${e.latlng.lng.toFixed(4)}`;
+    $('write-panel').classList.remove('hidden');
+    $('wp-text').focus();
+  });
+
+  function hidePanel() {
+    $('write-panel').classList.add('hidden');
+    $('wp-text').value = '';
+    pendingLatLng = null;
+  }
+
+  function cancelDrop() {
+    hidePanel();
+    armed = false;
+    $('drop-btn').classList.remove('armed');
+    $('bar-hint').textContent = '';
+  }
+
+  function dropLetter() {
+    const body = $('wp-text').value.trim();
+    if (!body || !pendingLatLng) { $('wp-text').focus(); return; }
+    const d = { lat: pendingLatLng.lat, lng: pendingLatLng.lng, pen: pen || '이름 없는 발신인', place: '', body };
+    myLetters.push(d);
+    localStorage.setItem('jumeoni_map_letters', JSON.stringify(myLetters));
+    addMarker(d, true).openPopup();
+    cancelDrop();
+    toast('편지를 놓아뒀어요 · 개국하면 모두의 지도에 떠요');
+  }
+</script>
+</body>
+</html>
