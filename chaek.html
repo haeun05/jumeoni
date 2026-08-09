@@ -4,9 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>주머니 — 느린 책 교환</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="주머니">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:url" content="https://haeun05.github.io/jumeoni/chaek.html">
+<meta property="og:title" content="누군가 당신에게 책 한 권을 건넸어요">
+<meta property="og:description" content="다 읽은 뒤에야 열리는 봉인 편지가 함께 왔어요.">
+<meta property="og:image" content="https://haeun05.github.io/jumeoni/og-chaek.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="누군가 당신에게 책 한 권을 건넸어요">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="누군가 당신에게 책 한 권을 건넸어요">
+<meta name="twitter:description" content="다 읽은 뒤에야 열리는 봉인 편지가 함께 왔어요.">
+<meta name="twitter:image" content="https://haeun05.github.io/jumeoni/og-chaek.png">
 <meta name="description" content="책 한 권을 추천하고, 다 읽은 뒤에야 열어볼 수 있는 봉인 편지를 함께 건네는 곳.">
-<meta property="og:title" content="주머니 — 느린 책 교환">
-<meta property="og:description" content="누군가 당신에게 책 한 권을 건넸어요. 다 읽으면 편지를 열 수 있어요.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
 <meta name="theme-color" content="#faf6ef">
 <link rel="manifest" href="manifest.webmanifest">
@@ -493,6 +505,7 @@
 
   function passOn() {
     ['book','writer','reason','letter','from'].forEach(id => document.getElementById(id).value = '');
+    fillPenname();
     setLock(0);
     show('view-compose');
     window.scrollTo(0, 0);
@@ -555,6 +568,14 @@
     show('view-compose');
   }
 
+  // 우체국에서 지은 필명이 있으면 '건네는 사람'에 미리 채워둔다
+  function fillPenname() {
+    const pen = localStorage.getItem('jumeoni_pen');
+    const el = document.getElementById('from');
+    if (pen && !el.value) el.value = pen;
+  }
+
+  fillPenname();
   window.addEventListener('hashchange', route);
   route();
 </script>

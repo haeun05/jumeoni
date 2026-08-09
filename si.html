@@ -4,9 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>주머니 — 건네는 시</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="주머니">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:url" content="https://haeun05.github.io/jumeoni/si.html">
+<meta property="og:title" content="누군가 당신에게 시 한 편을 건넸어요">
+<meta property="og:description" content="주머니를 열어보세요.">
+<meta property="og:image" content="https://haeun05.github.io/jumeoni/og-si.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="누군가 당신에게 시 한 편을 건넸어요">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="누군가 당신에게 시 한 편을 건넸어요">
+<meta name="twitter:description" content="주머니를 열어보세요.">
+<meta name="twitter:image" content="https://haeun05.github.io/jumeoni/og-si.png">
 <meta name="description" content="직접 쓴 문장이나 저작권이 만료된 시를 카드로 만들어, 링크와 QR로 건네는 곳.">
-<meta property="og:title" content="주머니 — 건네는 시">
-<meta property="og:description" content="누군가 당신에게 시 한 편을 건넸어요. 주머니를 열어보세요.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
 <meta name="theme-color" content="#faf6ef">
 <link rel="manifest" href="manifest.webmanifest">
@@ -804,6 +816,7 @@
     document.getElementById('author').value = '';
     document.getElementById('note').value = '';
     document.getElementById('from').value = '';
+    fillPenname();
     show('view-compose');
     window.scrollTo(0, 0);
   }
@@ -823,8 +836,16 @@
     show('view-compose');
   }
 
+  // 우체국에서 지은 필명이 있으면 '건네는 사람'에 미리 채워둔다
+  function fillPenname() {
+    const pen = localStorage.getItem('jumeoni_pen');
+    const el = document.getElementById('from');
+    if (pen && !el.value) el.value = pen;
+  }
+
   renderChips();
   renderShelf();
+  fillPenname();
   window.addEventListener('hashchange', route);
   route();
 </script>

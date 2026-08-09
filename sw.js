@@ -1,7 +1,9 @@
-// 주머니 서비스 워커 — 정적 자산 캐시로 오프라인·재방문을 빠르게
-const CACHE = 'jumeoni-v3';
+// 주머니 서비스 워커
+// 배포 직후 새로고침 한 번이면 최신 화면이 보이도록:
+//   - HTML 문서와 내가 작성한 CSS/JS는 네트워크 우선 (실패 시 캐시)
+//   - 버전이 고정된 외부 라이브러리·아이콘만 캐시 우선
+const CACHE = 'jumeoni-v4';
 const CORE = [
-  './theme.css',
   './',
   './index.html',
   './si.html',
@@ -9,14 +11,23 @@ const CORE = [
   './post.html',
   './map.html',
   './pocket.html',
+  './theme.css',
   './lib/qrcode.min.js',
   './lib/lz-string.min.js',
   './manifest.webmanifest',
   './icon.svg'
 ];
 
+// 내용이 바뀌지 않는 자산만 캐시 우선으로 다룬다
+const IMMUTABLE = /\/(lib\/|icon\.svg|og-|manifest\.webmanifest)/;
+
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(CACHE)
+      // 일부 파일이 없어도 설치가 실패하지 않도록 개별 처리
+      .then(c => Promise.all(CORE.map(u => c.add(u).catch(() => null))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', e => {
@@ -27,26 +38,28 @@ self.addEventListener('activate', e => {
   );
 });
 
+function networkFirst(req, fallback) {
+  return fetch(req)
+    .then(res => {
+      const copy = res.clone();
+      caches.open(CACHE).then(c => c.put(req, copy));
+      return res;
+    })
+    .catch(() => caches.match(req).then(r => r || (fallback ? caches.match(fallback) : undefined)));
+}
+
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET') return;
 
-  // HTML 문서는 네트워크 우선 (배포 후 낡은 화면 방지), 실패 시 캐시
   if (e.request.mode === 'navigate') {
-    e.respondWith(
-      fetch(e.request)
-        .then(res => {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, copy));
-          return res;
-        })
-        .catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
-    );
+    e.respondWith(networkFirst(e.request, './index.html'));
     return;
   }
 
-  // 같은 출처 정적 자산은 캐시 우선
-  if (url.origin === location.origin) {
+  if (url.origin !== location.origin) return;  // 폰트·지도 타일은 네트워크에 맡긴다
+
+  if (IMMUTABLE.test(url.pathname)) {
     e.respondWith(
       caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
         const copy = res.clone();
@@ -54,6 +67,9 @@ self.addEventListener('fetch', e => {
         return res;
       }))
     );
+    return;
   }
-  // 외부(폰트·지도 타일)는 그대로 네트워크에 맡긴다
+
+  // 내가 작성한 CSS/JS — 항상 최신을 먼저
+  e.respondWith(networkFirst(e.request));
 });

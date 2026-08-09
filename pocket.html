@@ -4,6 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>주머니 — 내 주머니</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="주머니">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:url" content="https://haeun05.github.io/jumeoni/pocket.html">
+<meta property="og:title" content="내 주머니">
+<meta property="og:description" content="내가 건넨 것들과 주운 것들이 모이는 곳.">
+<meta property="og:image" content="https://haeun05.github.io/jumeoni/og-home.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="내 주머니">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="내 주머니">
+<meta name="twitter:description" content="내가 건넨 것들과 주운 것들이 모이는 곳.">
+<meta name="twitter:image" content="https://haeun05.github.io/jumeoni/og-home.png">
 <meta name="description" content="내가 건넨 것들과 주운 것들이 모이는 곳.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧺</text></svg>">
 <meta name="theme-color" content="#faf6ef">
@@ -103,6 +117,9 @@
 <main>
   <div class="me" id="me"></div>
 
+  <h2>이어지는 인연 <span class="cnt" id="cnt-journeys"></span></h2>
+  <div id="list-journeys"></div>
+
   <h2>건넨 것들 <span class="cnt" id="cnt-given"></span></h2>
   <div id="list-given"></div>
 
@@ -114,6 +131,9 @@
 
   <h2>보관한 마음 <span class="cnt" id="cnt-likes"></span></h2>
   <div id="list-likes"></div>
+
+  <h2>신고해 끊은 필명 <span class="cnt" id="cnt-blocked"></span></h2>
+  <div id="list-blocked"></div>
 </main>
 <div class="copied-toast" id="toast">링크를 복사했어요</div>
 <footer>
@@ -148,6 +168,27 @@
       ? arr.map(render).join('')
       : `<div class="empty">${emptyMsg}</div>`;
   }
+
+  // 이어지는 인연 (우체국)
+  const journeys = read('jumeoni_journeys', {});
+  const meetsMap = read('jumeoni_meets', {});
+  const blockedMap = read('jumeoni_blocked', {});
+  const journeyRows = Object.keys(journeys).filter(k => !blockedMap[k]);
+  fill('list-journeys', 'cnt-journeys', journeyRows,
+    '아직 시작한 인연이 없어요. <a href="post.html" style="color:var(--accent)">우체국</a>에서 오늘의 인연을 만나보세요.',
+    k => {
+      const total = journeys[k].length;
+      const met = meetsMap[k];
+      const stage = met ? `${esc(met.as)}(으)로 만남 신청함`
+        : total >= 7 ? '만남을 신청할 수 있어요'
+        : total >= 3 ? `${total}통째 · 문답이 열렸어요`
+        : `${total}통째 · 세 통이 되면 문답이 열려요`;
+      return `<div class="item" style="cursor:pointer" onclick="location.href='post.html'">
+        <span class="ico">💌</span>
+        <span><span class="t">${esc(k)}</span><span class="d" style="display:block">${stage}</span></span>
+        <span class="act" style="pointer-events:none">${'●'.repeat(Math.min(total, 7))}${'○'.repeat(Math.max(0, 7 - total))}</span>
+      </div>`;
+    });
 
   // 건넨 것들 (시·책·손글씨)
   const given = read('jumeoni_given', []);
@@ -187,6 +228,26 @@
       <span class="ico">🕊️</span>
       <span><span class="t">${esc(w)}</span><span class="d" style="display:block">개국하면 첫 편지가 배달돼요</span></span>
     </div>`);
+
+  // 신고해 끊은 필명
+  function renderBlocked() {
+    const b = read('jumeoni_blocked', {});
+    const keys = Object.keys(b);
+    fill('list-blocked', 'cnt-blocked', keys,
+      '신고한 필명이 없어요. 불편한 편지가 오면 우체국에서 봉인 신고할 수 있어요.',
+      k => `<div class="item">
+        <span class="ico">🚩</span>
+        <span><span class="t">${esc(k)}</span><span class="d" style="display:block">${esc(b[k].reason)} · ${fmt(b[k].at)}</span></span>
+        <button class="act" onclick="unblock('${esc(k)}')">신고 취소</button>
+      </div>`);
+  }
+  function unblock(pen) {
+    const b = read('jumeoni_blocked', {});
+    delete b[pen];
+    localStorage.setItem('jumeoni_blocked', JSON.stringify(b));
+    renderBlocked();
+  }
+  renderBlocked();
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
