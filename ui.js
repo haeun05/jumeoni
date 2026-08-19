@@ -45,6 +45,59 @@
     apply(current());
   }
 
+  // ---------- 하단 탭바 ----------
+  // 방을 옮기려고 버튼을 찾아 누르고 푸터 링크를 뒤지던 걸 없앤다.
+  const TABS = [
+    { href: 'post.html',   icon: 'love',   label: '소개팅' },
+    { href: 'map.html',    icon: 'pin',    label: '지도' },
+    { href: 'si.html',     icon: 'scroll', label: '시' },
+    { href: 'chaek.html',  icon: 'books',  label: '책' },
+    { href: 'pocket.html', icon: 'pouch',  label: '나' }
+  ];
+
+  function here() {
+    const f = location.pathname.split('/').pop() || 'index.html';
+    return f === '' ? 'index.html' : f;
+  }
+
+  function mountTabs() {
+    if (document.getElementById('tabbar')) return;
+    const cur = here();
+    const nav = document.createElement('nav');
+    nav.id = 'tabbar';
+    nav.innerHTML = TABS.map(t => `
+      <a class="tab${t.href === cur ? ' on' : ''}" href="${t.href}">
+        ${window.jIcon ? window.jIcon(t.icon, 'ic tab-ic') : ''}
+        <span>${t.label}</span>
+      </a>`).join('');
+    document.body.appendChild(nav);
+    document.documentElement.classList.add('has-tabbar');
+  }
+
+  // 탭바가 대신하는 안내들은 걷어낸다 — 같은 곳으로 가는 길이 둘일 필요는 없다
+  function tidyNav() {
+    const cur = here();
+    document.querySelectorAll('button[onclick*="location.href="]').forEach(b => {
+      const m = b.getAttribute('onclick').match(/location\.href\s*=\s*'([^']+\.html)'/);
+      if (m && TABS.some(t => t.href === m[1]) && m[1] !== cur) b.remove();
+    });
+    document.querySelectorAll('footer').forEach(f => {
+      const links = [...f.querySelectorAll('a')].filter(a => /\.html$/.test(a.getAttribute('href') || ''));
+      if (!links.length) return;
+      links.forEach(a => {
+        // 링크 뒤에 남는 ' · ' 같은 찌꺼기까지 함께 지운다
+        let sib = a.nextSibling;
+        if (sib && sib.nodeType === 3 && /^[\s·]*$/.test(sib.nodeValue)) sib.remove();
+        const prev = a.previousSibling;
+        if (prev && prev.nodeType === 3 && /^[\s·]*$/.test(prev.nodeValue)) prev.remove();
+        a.remove();
+      });
+      // 링크만 있던 줄의 <br>도 정리
+      while (f.lastChild && (f.lastChild.nodeName === 'BR' ||
+             (f.lastChild.nodeType === 3 && !f.lastChild.nodeValue.trim()))) f.lastChild.remove();
+    });
+  }
+
   // ---------- 움직임 ----------
   const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -73,12 +126,20 @@
   }
 
   function watch() {
-    const views = document.querySelectorAll('[id^="view-"], section[id]');
+    const views = [...document.querySelectorAll('[id^="view-"]')];
+    // 지금 보이는 화면을 기억해 둔다. 등장 클래스를 붙이는 것 자체가
+    // 다시 관찰되어 무한히 되풀이되는 걸 막기 위해서다.
+    const shown = new WeakSet();
+    views.forEach(v => { if (!v.classList.contains('hidden')) shown.add(v); });
+
     const mo = new MutationObserver(muts => {
       for (const m of muts) {
         if (m.type === 'attributes' && m.attributeName === 'class') {
           const el = m.target;
-          if (el.matches('[id^="view-"]') && !el.classList.contains('hidden')) enter(el);
+          const visible = !el.classList.contains('hidden');
+          const was = shown.has(el);
+          if (visible && !was) { shown.add(el); enter(el); }
+          else if (!visible && was) shown.delete(el);
         }
         if (m.type === 'childList' && m.addedNodes.length) {
           const t = m.target;
@@ -92,6 +153,8 @@
 
   function boot() {
     mountToggle();
+    mountTabs();
+    tidyNav();
     staggerAll();
     watch();
     // 첫 화면도 부드럽게

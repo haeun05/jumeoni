@@ -143,6 +143,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="theme.css">
+<script src="icons.js" defer></script>
 <script src="ui.js" defer></script>
 </head>
 <body>
@@ -202,7 +203,9 @@
   // 지도도 테마를 따라간다 ({r}은 레티나에서 @2x 타일을 자동 선택)
   const TILE_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
   const tileUrl = mode => `https://{s}.basemaps.cartocdn.com/rastertiles/${mode === 'dark' ? 'dark_all' : 'voyager'}/{z}/{x}/{y}{r}.png`;
+  // ui.js보다 먼저 실행되므로 저장된 선택을 직접 읽어 첫 타일부터 맞춘다
   const isDark = () => (document.documentElement.getAttribute('data-theme')
+    || localStorage.getItem('jumeoni_theme')
     || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
 
   let tiles = L.tileLayer(tileUrl(isDark() ? 'dark' : 'light'), {

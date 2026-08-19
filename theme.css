@@ -321,6 +321,10 @@ textarea.letter-write::placeholder { color: #a99f90; }
 /* 시 방 */
 .tpl { border-radius: 18px !important; padding: 9px !important; }
 .tpl .swatch { border-radius: 12px; }
+/* '쓰는 방법'은 종이 견본이 아니라 아이콘 칸이라 바탕을 맞춘다 */
+#mode-picker .swatch { background: var(--bg-2) !important; border: none !important; color: var(--ink-soft); }
+#mode-picker .tpl.on .swatch { background: color-mix(in srgb, var(--accent) 16%, transparent) !important; color: var(--accent); }
+#mode-picker .swatch .ic { width: 22px; height: 22px; }
 .tpl.on { border-color: var(--accent) !important; box-shadow: 0 0 0 1.5px var(--accent) inset !important; }
 .tpl .name, .shelf-count-row, .qr-caption, .notice, .picks-note, .lineage, .seal-msg, .rp-note {
   color: var(--ink-soft) !important;
@@ -399,6 +403,48 @@ footer a:hover, .pocket-door a:hover { color: var(--accent) !important; }
   :root:not([data-theme="light"]) .scene .s-bird { fill: #e8e4da; }
   :root:not([data-theme="light"]) .scene .s-env-bg { fill: #f3ece0; }
 }
+
+/* ---------- 아이콘 ---------- */
+.ic {
+  width: 1.15em; height: 1.15em;
+  vertical-align: -.22em;
+  flex-shrink: 0;
+}
+.ic-wrap { display: inline; }
+.door .ic-wrap .ic { width: 30px; height: 30px; color: var(--accent); vertical-align: middle; }
+.item .ico .ic, .mail-item .env .ic { width: 22px; height: 22px; color: var(--accent); }
+.btn .ic, .bar-btn .ic, .pop-btn .ic { margin-right: 6px; }
+.chip .ic { width: 1em; height: 1em; }
+
+/* ---------- 하단 탭바 ---------- */
+#tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 950;
+  display: flex; justify-content: center; gap: 2px;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(18px) saturate(1.2);
+  border-top: 1.5px solid var(--line);
+}
+#tabbar .tab {
+  flex: 1; max-width: 96px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 7px 4px 5px;
+  text-decoration: none; color: var(--ink-soft);
+  font-size: 10.5px; letter-spacing: .02em; font-weight: 500;
+  border-radius: 14px;
+  transition: color .25s var(--ease), background .25s var(--ease), transform .25s var(--spring);
+}
+#tabbar .tab .tab-ic { width: 23px; height: 23px; stroke-width: 1.6; }
+#tabbar .tab:hover { color: var(--ink); }
+#tabbar .tab:active { transform: scale(.93); }
+#tabbar .tab.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+#tabbar .tab.on .tab-ic { stroke-width: 1.9; }
+
+/* 탭바에 가리지 않도록 */
+.has-tabbar body { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
+.has-tabbar footer { padding-bottom: 8px !important; }
+/* 지도는 100vh 구조라 body 아래 여백만으로 탭바 자리가 확보된다 */
+.has-tabbar .write-panel { bottom: calc(84px + 74px) !important; }
 
 /* 테마 전환 버튼 */
 #theme-toggle {
