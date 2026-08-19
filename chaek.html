@@ -93,6 +93,31 @@
   .btn.ghost:hover { color: var(--accent); border-color: var(--accent); }
   .btn.small { margin-top: 0; padding: 12px; font-size: 14px; }
 
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 13px; color: var(--ink-soft);
+    background: transparent; border: 1px solid var(--line); border-radius: 999px;
+    padding: 7px 14px; cursor: pointer; transition: all .25s;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .pick {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 16px; margin-top: 9px; cursor: pointer;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid var(--line); border-radius: 3px;
+    transition: transform .2s, border-color .2s;
+  }
+  .pick:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .pick .pb { font-size: 14.5px; font-weight: 600; }
+  .pick .pw { font-size: 12px; color: var(--ink-soft); font-weight: 300; margin-top: 3px; }
+  .pick .take {
+    margin-left: auto; flex-shrink: 0; font-size: 11.5px; color: var(--accent);
+    border: 1px solid var(--accent); border-radius: 999px; padding: 4px 11px;
+  }
+  .picks-note { font-size: 12px; color: var(--ink-soft); font-weight: 300; margin-top: 12px; line-height: 1.9; }
+
   .lock-picker { display: flex; gap: 8px; flex-wrap: wrap; }
   .lock {
     font-family: 'Noto Serif KR', serif;
@@ -242,6 +267,9 @@
     <h1>책 한 권과<br>봉인 편지를 건네보세요</h1>
     <p class="sub">책을 추천하면서 편지를 함께 봉인해요<br>편지는 상대가 책을 다 읽은 뒤에야 열 수 있어요</p>
     <button class="btn ghost small" onclick="location.href='si.html'">📜 건네는 시 방으로</button>
+    <label>어떤 마음을 건네고 싶나요 <span style="opacity:.6">(고르면 책을 추천해드려요)</span></label>
+    <div class="chips" id="mood-chips"></div>
+    <div id="book-picks"></div>
     <label>책 제목</label>
     <input type="text" id="book" placeholder="예) 어린 왕자">
     <label>지은이</label>
@@ -306,6 +334,28 @@
       <div class="letter hidden" id="letter-body"></div>
     </div>
 
+    <!-- 봉인을 연 뒤에야 나타나는 왕복의 마지막 조각 -->
+    <div id="reply-wrap" class="hidden" style="margin-top:22px">
+      <button class="btn" onclick="toggleReading()">✍️ 다 읽었다고, 감상 돌려보내기</button>
+      <div id="reading-panel" class="hidden" style="margin-top:18px;padding:22px 20px;background:rgba(255,255,255,0.55);border:1px solid var(--line);border-radius:3px">
+        <p style="font-size:13px;color:var(--ink-soft);font-weight:300;line-height:1.9">
+          이 책을 건네준 사람은 당신이 다 읽었는지 아직 몰라요.<br>
+          감상을 적어 돌려보내면, 그제야 교환이 한 바퀴 돌아요.</p>
+        <label>다 읽고 남은 마음</label>
+        <textarea class="boxed" id="rd-body" placeholder="어떤 대목이 오래 남았나요"></textarea>
+        <label>가장 오래 머문 곳 <span style="opacity:.6">(선택)</span></label>
+        <input type="text" id="rd-mark" placeholder="예) 여우가 길들임을 말하는 장면">
+        <label>별점 <span style="opacity:.6">(선택)</span></label>
+        <div class="chips" id="rd-stars"></div>
+        <label>보내는 이 <span style="opacity:.6">(선택)</span></label>
+        <input type="text" id="rd-from" placeholder="예) 당신의 독자">
+        <button class="btn" style="margin-top:24px" onclick="makeReading()">감상 링크 만들기</button>
+        <div class="linkbox hidden" id="rd-linkbox"></div>
+        <div class="copied" id="rd-copied"></div>
+        <button class="btn ghost hidden" id="rd-copy-btn" onclick="copyReading()">감상 링크 복사하기</button>
+      </div>
+    </div>
+
     <button class="btn ghost" onclick="togglePostcard()">📬 읽는 중이라고, 엽서 한 장 보내기</button>
     <div id="postcard-panel" class="hidden" style="margin-top:18px;padding:20px;background:rgba(255,255,255,0.55);border:1px solid var(--line);border-radius:3px">
       <p style="font-size:13px;color:var(--ink-soft);font-weight:300;line-height:1.9">다 읽기 전에도 안부는 보낼 수 있어요.<br>짧은 엽서 링크를 만들어 건네준 사람에게 보내보세요.</p>
@@ -335,6 +385,21 @@
       <div class="gift-from" id="pcv-from"></div>
     </div>
     <div class="lineage">봉인 편지는 아직 열리지 않았어요 — 조금만 더 기다려주세요</div>
+    <button class="btn ghost" onclick="location.hash=''; route()">나도 책 한 권 건네기</button>
+  </section>
+
+  <!-- 받기: 다 읽고 돌아온 감상 -->
+  <section id="view-reading" class="card-wrap hidden">
+    <div class="card">
+      <div class="book-label">다 읽었대요</div>
+      <div class="book-title" id="rv-book"></div>
+      <div id="rv-stars" style="margin-top:14px;font-size:19px;letter-spacing:4px;color:var(--accent)"></div>
+      <div class="divider"></div>
+      <div class="book-reason" id="rv-body"></div>
+      <div id="rv-mark" style="margin-top:22px;padding:14px 16px;background:rgba(70,97,78,0.06);border-left:3px solid var(--accent);border-radius:2px;font-size:13.5px;line-height:1.9;font-weight:300"></div>
+      <div class="gift-from" id="rv-from"></div>
+    </div>
+    <div class="lineage">당신이 건넨 책이 한 사람을 통과해 돌아왔어요 🌱</div>
     <button class="btn ghost" onclick="location.hash=''; route()">나도 책 한 권 건네기</button>
   </section>
 
@@ -463,10 +528,14 @@
     document.getElementById('letter-body').classList.add('hidden');
     document.getElementById('seal-confirm').classList.add('hidden');
     document.getElementById('wax').classList.remove('hidden');
-    // 엽서 패널 초기화
+    // 엽서 · 감상 패널 초기화
     document.getElementById('postcard-panel').classList.add('hidden');
     document.getElementById('pc-linkbox').classList.add('hidden');
     document.getElementById('pc-copy-btn').classList.add('hidden');
+    document.getElementById('reply-wrap').classList.add('hidden');
+    document.getElementById('reading-panel').classList.add('hidden');
+    document.getElementById('rd-linkbox').classList.add('hidden');
+    document.getElementById('rd-copy-btn').classList.add('hidden');
     updateSealMsg(d);
   }
 
@@ -501,6 +570,8 @@
     const body = document.getElementById('letter-body');
     body.textContent = currentParcel.l;
     body.classList.remove('hidden');
+    // 봉인을 열었다면 이제 감상을 돌려보낼 수 있다
+    document.getElementById('reply-wrap').classList.remove('hidden');
   }
 
   function passOn() {
@@ -509,6 +580,110 @@
     setLock(0);
     show('view-compose');
     window.scrollTo(0, 0);
+  }
+
+  // ---------- 책 고르기 도우미 ----------
+  // 제목과 지은이는 사실 정보라 옮겨 적어도 저작권과 무관하다. 본문은 담지 않는다.
+  const PICKS = {
+    '위로가 필요한 사람에게': [
+      ['모모', '미하엘 엔데'], ['나의 라임오렌지나무', 'J.M. 바스콘셀로스'],
+      ['어린 왕자', '앙투안 드 생텍쥐페리'], ['곰돌이 푸', 'A.A. 밀른']
+    ],
+    '새로 시작하는 사람에게': [
+      ['데미안', '헤르만 헤세'], ['갈매기의 꿈', '리처드 바크'],
+      ['연금술사', '파울로 코엘료'], ['월든', '헨리 데이비드 소로']
+    ],
+    '혼자인 밤을 보내는 사람에게': [
+      ['노인과 바다', '어니스트 헤밍웨이'], ['인간 실격', '다자이 오사무'],
+      ['이방인', '알베르 카뮈'], ['호밀밭의 파수꾼', 'J.D. 샐린저']
+    ],
+    '사랑에 빠진 사람에게': [
+      ['오만과 편견', '제인 오스틴'], ['폭풍의 언덕', '에밀리 브론테'],
+      ['위대한 개츠비', 'F. 스콧 피츠제럴드'], ['젊은 베르테르의 슬픔', '괴테']
+    ],
+    '먼 곳을 그리는 사람에게': [
+      ['그리스인 조르바', '니코스 카잔차키스'], ['동물농장', '조지 오웰'],
+      ['어둠의 심연', '조지프 콘래드'], ['하늘과 바람과 별과 시', '윤동주']
+    ],
+    '웃고 싶은 사람에게': [
+      ['이상한 나라의 앨리스', '루이스 캐럴'], ['허클베리 핀의 모험', '마크 트웨인'],
+      ['돈키호테', '미겔 데 세르반테스'], ['톰 소여의 모험', '마크 트웨인']
+    ]
+  };
+
+  function renderMoodChips() {
+    document.getElementById('mood-chips').innerHTML = Object.keys(PICKS).map(m =>
+      `<button type="button" class="chip" data-m="${m}" onclick="showPicks('${m}')">${m}</button>`).join('');
+  }
+
+  function showPicks(mood) {
+    document.querySelectorAll('#mood-chips .chip').forEach(c => c.classList.toggle('on', c.dataset.m === mood));
+    document.getElementById('book-picks').innerHTML = PICKS[mood].map(([b, w]) => `
+      <div class="pick" onclick="takePick('${b.replace(/'/g, "\\'")}','${w.replace(/'/g, "\\'")}')">
+        <span>📗</span>
+        <span><span class="pb">『${b}』</span><span class="pw" style="display:block">${w}</span></span>
+        <span class="take">이 책으로</span>
+      </div>`).join('') +
+      `<p class="picks-note">고르면 아래 칸이 채워져요. 물론 서재에 없는 책도 좋아요 —<br>당신이 정말 건네고 싶은 한 권이 제일 좋은 책이에요.</p>`;
+  }
+
+  function takePick(book, writer) {
+    document.getElementById('book').value = book;
+    document.getElementById('writer').value = writer;
+    document.getElementById('reason').focus();
+  }
+
+  // ---------- 다 읽고 돌려보내는 감상 ----------
+  let readingLink = '';
+  let rdStars = 0;
+
+  function renderStars() {
+    document.getElementById('rd-stars').innerHTML = [1, 2, 3, 4, 5].map(n =>
+      `<button type="button" class="chip ${n === rdStars ? 'on' : ''}" onclick="setStars(${n})">${'★'.repeat(n)}</button>`).join('');
+  }
+  function setStars(n) { rdStars = (rdStars === n ? 0 : n); renderStars(); }
+
+  function toggleReading() {
+    document.getElementById('reading-panel').classList.toggle('hidden');
+    renderStars();
+  }
+
+  function makeReading() {
+    const body = document.getElementById('rd-body').value.trim();
+    if (!body) { document.getElementById('rd-body').focus(); return; }
+    const data = {
+      rb: currentParcel ? currentParcel.b : '',
+      d: body,
+      k: document.getElementById('rd-mark').value.trim(),
+      s: rdStars,
+      f: document.getElementById('rd-from').value.trim()
+    };
+    readingLink = location.origin + location.pathname + '#r=' +
+      LZString.compressToEncodedURIComponent(JSON.stringify(data));
+    const box = document.getElementById('rd-linkbox');
+    box.textContent = readingLink;
+    box.classList.remove('hidden');
+    document.getElementById('rd-copy-btn').classList.remove('hidden');
+    document.getElementById('rd-copied').textContent = '';
+    const given = JSON.parse(localStorage.getItem('jumeoni_given') || '[]');
+    given.unshift({ k: 'reading', t: data.rb || '읽은 책', link: readingLink, at: Date.now() });
+    localStorage.setItem('jumeoni_given', JSON.stringify(given.slice(0, 100)));
+  }
+
+  function copyReading() {
+    navigator.clipboard.writeText(readingLink).then(() => {
+      document.getElementById('rd-copied').textContent = '복사됐어요. 책을 건네준 사람에게 보내주세요.';
+    });
+  }
+
+  function renderReading(d) {
+    document.getElementById('rv-book').textContent = d.rb ? `『${d.rb}』` : '건네주신 책';
+    document.getElementById('rv-stars').textContent = d.s ? '★'.repeat(d.s) + '☆'.repeat(5 - d.s) : '';
+    document.getElementById('rv-body').textContent = d.d;
+    const mark = document.getElementById('rv-mark');
+    mark.textContent = d.k ? `가장 오래 머문 곳 — ${d.k}` : '';
+    mark.style.display = d.k ? '' : 'none';
+    document.getElementById('rv-from').textContent = d.f ? d.f + ' 드림' : '';
   }
 
   // ---------- 중간 엽서 ----------
@@ -550,12 +725,12 @@
   }
 
   function show(id) {
-    ['view-compose','view-done','view-parcel','view-card','view-postcard'].forEach(v =>
+    ['view-compose','view-done','view-parcel','view-card','view-postcard','view-reading'].forEach(v =>
       document.getElementById(v).classList.toggle('hidden', v !== id));
   }
 
   function route() {
-    const m = location.hash.match(/^#(z|p)=(.+)$/);
+    const m = location.hash.match(/^#(z|p|r)=(.+)$/);
     if (m && m[1] === 'z') {
       const d = decodeParcel(m[2]);
       if (d && d.b) { currentParcel = d; show('view-parcel'); return; }
@@ -564,8 +739,13 @@
       const d = decodeParcel(m[2]);
       if (d && d.pr) { renderPostcard(d); show('view-postcard'); return; }
     }
+    if (m && m[1] === 'r') {
+      const d = decodeParcel(m[2]);
+      if (d && d.d) { renderReading(d); show('view-reading'); return; }
+    }
     currentParcel = null;
     show('view-compose');
+    renderMoodChips();
   }
 
   // 우체국에서 지은 필명이 있으면 '건네는 사람'에 미리 채워둔다
