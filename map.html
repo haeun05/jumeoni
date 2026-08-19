@@ -143,6 +143,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="theme.css">
+<script src="ui.js" defer></script>
 </head>
 <body>
 <header>
@@ -197,12 +198,24 @@
   const pen = localStorage.getItem('jumeoni_pen') || '';
 
   const map = L.map('map', { zoomControl: true }).setView([36.5, 127.8], 7);
-  // CARTO Voyager 타일: {r}이 레티나 화면에서 @2x 고해상도 타일을 자동 선택한다
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    maxZoom: 20,
-    subdomains: 'abcd',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+
+  // 지도도 테마를 따라간다 ({r}은 레티나에서 @2x 타일을 자동 선택)
+  const TILE_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+  const tileUrl = mode => `https://{s}.basemaps.cartocdn.com/rastertiles/${mode === 'dark' ? 'dark_all' : 'voyager'}/{z}/{x}/{y}{r}.png`;
+  const isDark = () => (document.documentElement.getAttribute('data-theme')
+    || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
+
+  let tiles = L.tileLayer(tileUrl(isDark() ? 'dark' : 'light'), {
+    maxZoom: 20, subdomains: 'abcd', attribution: TILE_ATTR
   }).addTo(map);
+
+  document.addEventListener('jumeoni:theme', e => {
+    const next = L.tileLayer(tileUrl(e.detail.mode), { maxZoom: 20, subdomains: 'abcd', attribution: TILE_ATTR });
+    next.addTo(map);
+    next.once('load', () => map.removeLayer(tiles));
+    setTimeout(() => { if (map.hasLayer(tiles)) map.removeLayer(tiles); }, 1200);
+    tiles = next;
+  });
 
   function letterPopup(d, mine) {
     const actions = mine

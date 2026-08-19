@@ -112,6 +112,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="theme.css">
+<script src="ui.js" defer></script>
 </head>
 <body>
 <main>
@@ -120,18 +121,18 @@
     <p class="tag">이름도 얼굴도 모른 채, 편지로 시작하는 소개팅<br>— 그리고 시와 책과 지도의 낭만</p>
     <svg class="scene" viewBox="0 0 520 190" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <!-- 별 -->
-      <g fill="#c9beab">
+      <g class="s-star" fill="#c9beab">
         <circle cx="60" cy="28" r="1.6"/><circle cx="140" cy="14" r="1.2"/>
         <circle cx="420" cy="22" r="1.5"/><circle cx="480" cy="46" r="1.1"/>
         <path d="M348 12 l2 5 5 2 -5 2 -2 5 -2-5 -5-2 5-2 z" opacity=".7"/>
       </g>
       <!-- 언덕 -->
-      <path d="M0 168 Q130 120 260 150 Q390 178 520 140 L520 190 L0 190 Z" fill="#f7edda"/>
-      <path d="M0 178 Q170 150 320 168 Q430 180 520 164 L520 190 L0 190 Z" fill="#f1e3cd"/>
+      <path d="M0 168 Q130 120 260 150 Q390 178 520 140 L520 190 L0 190 Z" class="s-hill1" fill="#f7edda"/>
+      <path d="M0 178 Q170 150 320 168 Q430 180 520 164 L520 190 L0 190 Z" class="s-hill2" fill="#f1e3cd"/>
       <!-- 나무 -->
       <g>
-        <path d="M96 156 Q94 120 88 104" stroke="#8a6d4a" stroke-width="5" fill="none" stroke-linecap="round"/>
-        <path d="M92 128 Q78 118 72 108" stroke="#8a6d4a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <path d="M96 156 Q94 120 88 104" class="s-trunk" stroke="#8a6d4a" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M92 128 Q78 118 72 108" class="s-trunk" stroke="#8a6d4a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
         <circle cx="86" cy="92" r="22" fill="#f0d3d8"/>
         <circle cx="64" cy="102" r="15" fill="#eecad1"/>
         <circle cx="106" cy="102" r="14" fill="#f3dade"/>
@@ -139,9 +140,9 @@
       </g>
       <!-- 우체국(집) -->
       <g>
-        <rect x="304" y="96" width="98" height="62" rx="4" fill="#fffdf8" stroke="#d9cdb6" stroke-width="2"/>
+        <rect x="304" y="96" width="98" height="62" rx="4" class="s-house" fill="#fffdf8" stroke="#d9cdb6" stroke-width="2"/>
         <path d="M296 100 L353 62 L410 100 Z" fill="#ee8b6c"/>
-        <rect x="384" y="66" width="10" height="24" fill="#8a6d4a"/>
+        <rect x="384" y="66" width="10" height="24" class="s-chimney" fill="#8a6d4a"/>
         <path d="M389 60 q10 -8 6 -18 q12 6 4 20" fill="none" stroke="#c9beab" stroke-width="2.5" stroke-linecap="round" opacity=".8"/>
         <rect x="318" y="112" width="22" height="24" rx="2" fill="#f6c56b"/>
         <path d="M318 124 h22 M329 112 v24" stroke="#d9cdb6" stroke-width="1.6"/>
@@ -152,15 +153,15 @@
       <!-- 새와 편지 -->
       <path d="M150 60 Q240 30 330 44" fill="none" stroke="#c9beab" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round"/>
       <g transform="translate(142 52) rotate(-8)">
-        <path d="M0 6 Q6 0 12 4 Q17 -3 22 2 Q19 10 10 12 Q3 12 0 6 Z" fill="#fffdf8" stroke="#c9beab" stroke-width="1.4"/>
+        <path d="M0 6 Q6 0 12 4 Q17 -3 22 2 Q19 10 10 12 Q3 12 0 6 Z" class="s-bird" fill="#fffdf8" stroke="#c9beab" stroke-width="1.4"/>
       </g>
       <g transform="translate(300 36) rotate(10)">
-        <rect width="17" height="12" rx="1.6" fill="#fffdf8" stroke="#ee8b6c" stroke-width="1.4"/>
-        <path d="M0 1.5 L8.5 8 L17 1.5" fill="none" stroke="#ee8b6c" stroke-width="1.4"/>
+        <rect width="17" height="12" rx="1.6" class="s-env-bg" fill="#fffdf8" stroke="#ee8b6c" stroke-width="1.4"/>
+        <path d="M0 1.5 L8.5 8 L17 1.5" fill="none" class="s-env" stroke="#ee8b6c" stroke-width="1.4"/>
       </g>
       <!-- 우체통 -->
       <g>
-        <rect x="446" y="128" width="6" height="32" fill="#8a6d4a"/>
+        <rect x="446" y="128" width="6" height="32" class="s-chimney" fill="#8a6d4a"/>
         <rect x="436" y="108" width="26" height="24" rx="6" fill="#ee8b6c"/>
         <rect x="441" y="115" width="16" height="3.4" rx="1.7" fill="#fffdf8"/>
       </g>

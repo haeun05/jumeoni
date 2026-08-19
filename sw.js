@@ -2,7 +2,7 @@
 // 배포 직후 새로고침 한 번이면 최신 화면이 보이도록:
 //   - HTML 문서와 내가 작성한 CSS/JS는 네트워크 우선 (실패 시 캐시)
 //   - 버전이 고정된 외부 라이브러리·아이콘만 캐시 우선
-const CACHE = 'jumeoni-v4';
+const CACHE = 'jumeoni-v5';
 const CORE = [
   './',
   './index.html',
@@ -12,6 +12,7 @@ const CORE = [
   './map.html',
   './pocket.html',
   './theme.css',
+  './ui.js',
   './lib/qrcode.min.js',
   './lib/lz-string.min.js',
   './manifest.webmanifest',
