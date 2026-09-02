@@ -48,11 +48,11 @@
   // ---------- 하단 탭바 ----------
   // 방을 옮기려고 버튼을 찾아 누르고 푸터 링크를 뒤지던 걸 없앤다.
   const TABS = [
-    { href: 'post.html',   icon: 'love',   label: '소개팅' },
-    { href: 'map.html',    icon: 'pin',    label: '지도' },
-    { href: 'si.html',     icon: 'scroll', label: '시' },
-    { href: 'chaek.html',  icon: 'books',  label: '책' },
-    { href: 'pocket.html', icon: 'pouch',  label: '나' }
+    { href: 'index.html',  icon: 'envelope', label: '편지벽' },
+    { href: 'post.html',   icon: 'love',     label: '우편함' },
+    { href: 'si.html',     icon: 'scroll',   label: '시' },
+    { href: 'chaek.html',  icon: 'books',    label: '책' },
+    { href: 'pocket.html', icon: 'pouch',    label: '나' }
   ];
 
   function here() {

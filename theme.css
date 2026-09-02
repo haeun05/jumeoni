@@ -175,7 +175,7 @@ textarea#poem, textarea.boxed, textarea.letter-write { border-radius: 18px !impo
 }
 
 /* ---------- 카드: 어둠 속에서 빛나는 종이 ---------- */
-.card, .airmail, .letter, .qr-frame {
+.card, .airmail, .letter, .qr-frame, .lt {
   background: var(--paper) !important;
   color: #2b2620 !important;
   border: 1px solid var(--line-soft) !important;
@@ -462,3 +462,27 @@ footer a:hover, .pocket-door a:hover { color: var(--accent) !important; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- 편지 벽 ---------- */
+.lt { padding: 22px 20px !important; margin-bottom: 14px; }
+.lt .pen { color: #2b2620 !important; }
+.lt .place { color: #8b8073 !important; }
+.lt .body { color: #2b2620 !important; }
+.lt .more { color: var(--wax) !important; }
+.lt .mine-tag { color: var(--wax) !important; border-color: color-mix(in srgb, var(--wax) 45%, transparent) !important; }
+.lt .act button {
+  background: var(--accent) !important; color: #fff !important;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 30%, transparent);
+  transition: transform .2s var(--spring), filter .2s;
+}
+.lt .act button:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.lt:hover { transform: translateY(-2px); box-shadow: var(--shadow-l), var(--glow) !important; }
+.wall-top .count { color: var(--ink-soft) !important; }
+.mini {
+  border-radius: 999px !important; border: 1.5px solid var(--line) !important;
+  background: var(--surface) !important; color: var(--ink-soft) !important;
+  font-family: inherit !important; transition: border-color .2s, color .2s;
+}
+.mini:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent) !important; color: var(--accent) !important; }
+.lead h1 { font-size: 26px !important; }
+.sent .big { color: var(--ink) !important; }
